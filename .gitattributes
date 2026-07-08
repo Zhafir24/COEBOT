@@ -1,0 +1,30 @@
+# Force LF line endings for cross-platform consistency
+* text=auto eol=lf
+
+# Python source
+*.py text eol=lf diff=python
+*.pyi text eol=lf diff=python
+
+# Config & docs
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+
+# Windows-only scripts keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files (no diffing)
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.gguf binary
+*.bin binary
+*.safetensors binary

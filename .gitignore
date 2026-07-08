@@ -1,0 +1,113 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+.eggs/
+build/
+dist/
+wheels/
+develop-eggs/
+parts/
+sdist/
+var/
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# --- Virtual environments ---
+.venv/
+venv/
+env/
+ENV/
+.python-version-local
+
+# --- Testing & coverage ---
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# --- Type checking ---
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# --- IDE & editors ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# --- OS ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- Project-specific: data & artifacts ---
+# User documents — never commit
+data/documents/*
+!data/documents/.gitkeep
+
+# Vector DB — local, regenerable
+data/chroma_db/*
+!data/chroma_db/.gitkeep
+
+# Downloaded models — the models/ folder is ignored but its README
+# stays tracked so newcomers know what to put there.
+models/*
+!models/README.md
+*.bin
+*.gguf
+*.safetensors
+*.onnx
+
+# Logs
+logs/
+*.log
+
+# --- Secrets & local config ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+
+# --- Claude Code local session settings ---
+.claude/settings.local.json
+
+# --- Local user store (passwords are hashed but still don't commit) ---
+data/users.json
+data/users.json.tmp
+data/active_session.json
+data/active_session.json.tmp
+
+# --- User memory (personal facts) and local caches — never commit ---
+data/memory.json
+data/memory.json.tmp
+data/cache/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
