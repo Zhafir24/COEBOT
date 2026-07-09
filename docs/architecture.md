@@ -41,9 +41,9 @@ decisions. Updated whenever a major component changes.
 | `doc_analyzer.models`               | Frozen Pydantic types (`Document`, `Chunk`, `Answer`) that flow between modules.                    |
 | `doc_analyzer.config`               | Settings loaded from environment + `.env` (pydantic-settings).                                      |
 | `doc_analyzer.parsers.pdf`          | PDF → `Document` via `pypdf` (with `pypdfium2` fallback for problematic files).                     |
-| `doc_analyzer.parsers.docx`         | DOCX → `Document` via `mammoth`.                                                                    |
+| `doc_analyzer.parsers.docx`         | DOCX → `Document` via `python-docx` (text extraction); `mammoth` used separately for HTML preview.  |
 | `doc_analyzer.parsers.xlsx`         | XLSX → `Document` via `openpyxl`.                                                                   |
-| `doc_analyzer.chunking.text`        | `Document` → list of `Chunk`. Token-aware splitting via `tiktoken`.                                 |
+| `doc_analyzer.chunking.text`        | `Document` → list of `Chunk`. Character-window splitting (tokenizer-independent).                   |
 | `doc_analyzer.embeddings.encoder`   | Wraps `sentence-transformers` (`all-MiniLM-L6-v2`). Model cached as singleton.                      |
 | `doc_analyzer.retrieval.store`      | ChromaDB persistence + similarity search + metadata filtering.                                      |
 | `doc_analyzer.llm.client`           | In-process `llama-cpp-python` client. Includes `PrefixKVCache` for persistent prompt-prefix reuse. |

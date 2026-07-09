@@ -14,7 +14,7 @@ Initial public release.
 - `PrefixKVCache` — a persistent, disk-backed longest-prefix KV cache that survives restarts, fixing the `LlamaDiskCache` read-and-delete defect.
 - RAG pipeline: chunk → embed (`all-MiniLM-L6-v2`) → ChromaDB retrieval → grounded answer with page-level citations.
 - Full-document (deep-read) mode: reads entire documents in one prompt when they fit the context window.
-- Multi-format parsers: PDF (`pypdf` + `pypdfium2` fallback), DOCX (`mammoth`), XLSX (`openpyxl`).
+- Multi-format parsers: PDF (`pypdf` + `pypdfium2` fallback), DOCX (`python-docx` for text, `mammoth` for HTML preview), XLSX (`openpyxl`).
 - Local authentication: scrypt-hashed passwords + active-session tracking in local JSON files.
 - Per-user memory: personal facts remembered across chats, injected only when relevant, placed after document text so they don't invalidate KV-cached prefixes.
 - Streamlit UI with PNM branding, offline-served Plus Jakarta Sans fonts, and per-chat history persisted as standalone JSON files.

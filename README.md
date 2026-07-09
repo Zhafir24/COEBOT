@@ -128,7 +128,7 @@ Use https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF instead, and
 - **RAG mode** — chunk + embed + top-k retrieval for large document sets that exceed the context window.
 - **Full-document mode** — reads entire documents when they fit, so short PDFs get an uncompressed answer.
 - **Persistent KV cache** — prompt-prefix state is saved to disk, so re-asking about the same documents (even after restart) skips the expensive prefill phase.
-- **Multi-format parsers** — PDF (`pypdf`), DOCX (`mammoth`), and XLSX out of the box.
+- **Multi-format parsers** — PDF (`pypdf`), DOCX (`python-docx`), and XLSX (`openpyxl`) out of the box.
 - **Local auth** — per-user login backed by hashed passwords in a local JSON store.
 - **Memory** — personal facts remembered per user, injected into prompts only when relevant.
 - **Chat history** — every conversation persisted as a standalone JSON file for easy backup, export, or deletion.

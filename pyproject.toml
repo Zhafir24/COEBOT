@@ -25,8 +25,12 @@ classifiers = [
 dependencies = [
     "pypdf>=4.3.0,<6.0",
     "pypdfium2>=4.30.0,<6.0",
+    "python-docx>=1.1.0,<2.0",
     "mammoth>=1.8.0,<2.0",
     "openpyxl>=3.1.0,<4.0",
+    "pandas>=2.2.0,<3.0",
+    "numpy>=1.26.0,<3.0",
+    "diskcache>=5.6.0,<6.0",
     # Pinned to 0.3.18: the last prebuilt CPU wheel compiled WITHOUT
     # AVX-512. Wheels 0.3.21+ enable AVX-512, which crashes with
     # STATUS_ILLEGAL_INSTRUCTION (0xc000001d) on Meteor Lake CPUs
@@ -40,7 +44,6 @@ dependencies = [
     "pydantic>=2.6.0,<3.0",
     "pydantic-settings>=2.2.0,<3.0",
     "python-dotenv>=1.0.0,<2.0",
-    "tiktoken>=0.7.0,<1.0",
 ]
 
 [project.optional-dependencies]
