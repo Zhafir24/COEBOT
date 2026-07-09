@@ -10,7 +10,7 @@ Before you start, you need three things installed:
 - **Git** — https://git-scm.com/download/win
 - **A GGUF chat-tuned model file** — downloaded from Hugging Face (see Step 6 below)
 
-Windows 10 or 11 already ships with everything else COEBOT needs (PowerShell 5.1+, Visual C++ Redistributable, and AVX2 CPU support on any 2015+ machine).
+Windows 10 or 11 already ships with the runtime components COEBOT needs (Visual C++ Redistributable 2015-2022, PowerShell 5.1+, AVX2 CPU support on any 2015+ machine). The install command in **Step 5** uses a special index URL to pull a **prebuilt Windows binary wheel** for `llama-cpp-python`, so you do **not** need Visual Studio, Visual C++ Build Tools, or any C++ compiler. Do not skip the `--extra-index-url` flag or the install will try to compile from C++ source and fail.
 
 ## Installation — step by step
 
