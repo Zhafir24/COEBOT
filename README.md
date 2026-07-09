@@ -72,11 +72,13 @@ Answer **Y** when prompted.
 Still in PowerShell (prompt should still show `(.venv)`):
 
 ```powershell
-pip install -e .
+pip install --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu -e .
 copy .env.example .env
 ```
 
-The first command downloads and installs about 200 Python packages. It takes **2–5 minutes** depending on your internet speed. Watch the progress; when it finishes you'll see `Successfully installed doc_analyzer-0.1.0 ...`.
+The `--extra-index-url` flag is **required**. It tells pip to fetch `llama-cpp-python` as a prebuilt binary wheel from the maintainer's own wheel server, because that specific package publishes only source code to PyPI. Without this flag, pip would try to compile 20+ MB of C++ code on your machine and fail unless you happen to have Visual Studio Build Tools installed.
+
+The command downloads and installs about 200 Python packages. It takes **2–5 minutes** depending on your internet speed. Watch the progress; when it finishes you'll see `Successfully installed doc_analyzer-0.1.0 ...`.
 
 **Check:** Type `python -c "import doc_analyzer; print('OK')"` — you should see `OK` printed on the next line.
 
@@ -117,7 +119,8 @@ Use https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF instead, and
 |---|---|---|
 | `py --version` says "not recognized" | Python's PATH checkbox was missed during install | Uninstall Python from Settings → Apps, reinstall with **"Add python.exe to PATH"** ticked |
 | `Activate.ps1` cannot be loaded | PowerShell script execution is blocked | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, answer **Y**, then retry |
-| `pip install` fails with `error: Microsoft Visual C++ 14.0 or greater is required` | Missing MSVC build tools (rare on Windows 10/11) | Install Visual Studio Build Tools from https://visualstudio.microsoft.com/visual-cpp-build-tools/ |
+| `pip install` fails with `error: Microsoft Visual C++ 14.0 or greater is required` | You ran `pip install -e .` **without** the `--extra-index-url` flag, so pip tried to compile `llama-cpp-python` from source | Delete the `.venv\` folder, re-run Step 4, then re-run Step 5 **exactly as written** — the `--extra-index-url` flag pulls a prebuilt wheel and avoids compilation entirely. Only install Visual Studio Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/) if you have a specific reason to build from source. |
+| `pip install` says `ERROR: No matching distribution found for llama-cpp-python==0.3.18` | Same cause — the `--extra-index-url` flag was missing or misspelled | Copy Step 5's command exactly. The full URL is `https://abetlen.github.io/llama-cpp-python/whl/cpu` — no typos, no trailing slash needed |
 | App loads but errors *"No .gguf file found in models/"* | Model file not placed correctly | Confirm the file ends in `.gguf` and is directly inside `models/`, not in a subfolder |
 | Browser shows "This site can't be reached" | Streamlit hasn't finished starting yet | Wait 30 seconds after the terminal opens, then refresh |
 | Chatbot is very slow (< 1 token/sec) | Not enough free RAM, or single-channel memory | Close other apps; if the laptop has one RAM slot filled, adding a matched second stick roughly doubles inference speed |
