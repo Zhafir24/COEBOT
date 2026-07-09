@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in improving `doc_analyzer`. This project takes correctness seriously — read this guide before opening a PR.
+Thanks for your interest in improving COEBOT (Python package `doc_analyzer`). This project takes correctness seriously — read this guide before opening a PR.
 
 ## Development setup
 
@@ -37,7 +37,7 @@ Every PR must:
 
 ## Testing philosophy
 
-- **Unit tests** — fast, isolated, no real services. Use mocks for Ollama and ChromaDB.
+- **Unit tests** — fast, isolated, no real services. Mock `llama_cpp.Llama` and ChromaDB; never load a real GGUF file in unit tests.
 - **Integration tests** — marked with `@pytest.mark.integration`. Touch real services. Run with `pytest -m integration`.
 - **Test the failure paths.** Encrypted PDFs, empty files, oversized inputs, malformed Unicode.
 
@@ -55,5 +55,5 @@ Open a GitHub issue with:
 
 1. Minimal reproduction steps
 2. Expected vs actual behavior
-3. Environment (OS, Python version, Ollama version, model)
+3. Environment (OS, Python version, GGUF model filename, RAM)
 4. Relevant logs (with secrets redacted)

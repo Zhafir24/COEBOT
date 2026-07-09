@@ -26,6 +26,7 @@ dependencies = [
     "pypdf>=4.3.0,<6.0",
     "pypdfium2>=4.30.0,<6.0",
     "mammoth>=1.8.0,<2.0",
+    "openpyxl>=3.1.0,<4.0",
     # Pinned to 0.3.18: the last prebuilt CPU wheel compiled WITHOUT
     # AVX-512. Wheels 0.3.21+ enable AVX-512, which crashes with
     # STATUS_ILLEGAL_INSTRUCTION (0xc000001d) on Meteor Lake CPUs
@@ -120,8 +121,8 @@ show_error_codes = true
 pretty = true
 
 # Third-party libraries without type stubs.
-# (chromadb, ollama, and sentence_transformers ship their own stubs as
-# of the versions we pin; only the truly untyped libraries remain here.)
+# (chromadb and sentence_transformers ship their own stubs as of the
+# versions we pin; only the truly untyped libraries remain here.)
 [[tool.mypy.overrides]]
 module = [
     "streamlit.*",
@@ -145,7 +146,7 @@ addopts = [
     "--cov-fail-under=80",
 ]
 markers = [
-    "integration: integration tests that touch real services (Ollama, ChromaDB)",
+    "integration: integration tests that touch real services (ChromaDB, sentence-transformers)",
     "slow: tests that take more than a second",
 ]
 

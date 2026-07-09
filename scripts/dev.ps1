@@ -5,7 +5,7 @@
 #   check    Run lint, format check, type check
 #   format   Run formatter
 #   test     Run unit tests with coverage
-#   test-all Run all tests including integration (requires Ollama running)
+#   test-all Run all tests including integration (touches real ChromaDB + embeddings)
 #   clean    Remove build artifacts and caches
 
 param(
