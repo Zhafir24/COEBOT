@@ -108,6 +108,12 @@ data/memory.json
 data/memory.json.tmp
 data/cache/
 
+# --- Chat history and per-session UI state — never commit ---
+data/chats/
+data/current_chat.json
+data/pending_attachments.json
+data/selected_model.json
+
 # --- Jupyter ---
 .ipynb_checkpoints/
 *.ipynb_checkpoints

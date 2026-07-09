@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "doc_analyzer"
 version = "0.1.0"
-description = "Local document analysis chatbot for enterprise use (RAG over PDFs)."
+description = "COEBOT — local document analysis chatbot for enterprise use (RAG over PDFs, DOCXs, XLSXs)."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.12,<3.14"
@@ -58,8 +58,8 @@ dev = [
 doc-analyzer = "doc_analyzer.cli:main"
 
 [project.urls]
-Repository = "https://github.com/zhafirdhafin7/doc_analyzer"
-Issues = "https://github.com/zhafirdhafin7/doc_analyzer/issues"
+Repository = "https://github.com/Zhafir24/COEBOT"
+Issues = "https://github.com/Zhafir24/COEBOT/issues"
 
 # --- Hatch build config (src layout) ---
 [tool.hatch.build.targets.wheel]
