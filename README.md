@@ -58,7 +58,7 @@ You do **not** need separate downloads for pip or venv. They come bundled with P
 2. Type these commands one at a time, pressing Enter after each:
 
    ```powershell
-   cd $HOME\Documents
+   cd C:\
    git clone https://github.com/Zhafir24/COEBOT.git
    cd COEBOT
    ```
@@ -77,7 +77,7 @@ py -3.12 -m venv .venv
 **Check — CRITICAL:** Your PowerShell prompt **must** now start with `(.venv)`. Example:
 
 ```
-(.venv) PS C:\Users\yourname\Documents\COEBOT>
+(.venv) PS C:\COEBOT>
 ```
 
 If the `(.venv)` prefix is missing, **stop and fix it before Step 5** — without it, Step 5's `pip install` puts Streamlit and 200 other packages in the wrong place (system-wide Python), and Step 7's launcher will fail with "streamlit is not installed."
@@ -142,10 +142,10 @@ COEBOT needs a language model file (5–17 GB) to work. This file is too large f
 3. Move the file into COEBOT's `models\` folder. **Fastest way — in PowerShell:**
 
    ```powershell
-   move $HOME\Downloads\Qwen3.5-9B-UD-Q4_K_XL.gguf $HOME\Documents\COEBOT\models\
+   move $HOME\Downloads\Qwen3.5-9B-UD-Q4_K_XL.gguf C:\COEBOT\models\
    ```
 
-   Or by hand: open File Explorer, go to `C:\Users\<yourname>\Documents\COEBOT\models\` in one window and `C:\Users\<yourname>\Downloads\` in another, then drag the `.gguf` file from Downloads into the `models\` window.
+   Or by hand: open File Explorer, go to `C:\COEBOT\models\` in one window and `C:\Users\<yourname>\Downloads\` in another, then drag the `.gguf` file from Downloads into the `models\` window.
 
 #### For 32 GB+ RAM machines (higher-quality but heavier)
 
@@ -157,7 +157,7 @@ COEBOT needs a language model file (5–17 GB) to work. This file is too large f
 2. Same routine as above — the file lands in `Downloads\`, then:
 
    ```powershell
-   move $HOME\Downloads\Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf $HOME\Documents\COEBOT\models\
+   move $HOME\Downloads\Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf C:\COEBOT\models\
    ```
 
 **Check:** In PowerShell, from inside the COEBOT folder, type:
@@ -171,7 +171,7 @@ You should see one line naming your `.gguf` file with its size. If the output is
 ### Step 7 — Launch COEBOT
 
 1. Close PowerShell.
-2. Open File Explorer and go to `Documents\COEBOT`.
+2. Open File Explorer and go to `C:\COEBOT`.
 3. Double-click **`start_coebot.bat`**.
 4. A black terminal window opens. Wait ~30 seconds for the message *"You can now view your Streamlit app in your browser."*
 5. Your default browser opens automatically at **http://127.0.0.1/**.
@@ -190,7 +190,7 @@ You should see one line naming your `.gguf` file with its size. If the output is
 | `Activate.ps1` cannot be loaded | PowerShell script execution is blocked | Run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once, answer **Y**, then retry |
 | `pip install` fails with `error: Microsoft Visual C++ 14.0 or greater is required` | You ran `pip install -e .` **without** the `--extra-index-url` flag, so pip tried to compile `llama-cpp-python` from source | Delete the `.venv\` folder, re-run Step 4, then re-run Step 5 **exactly as written** — the `--extra-index-url` flag pulls a prebuilt wheel and avoids compilation entirely. Only install Visual Studio Build Tools (https://visualstudio.microsoft.com/visual-cpp-build-tools/) if you have a specific reason to build from source. |
 | `pip install` says `ERROR: No matching distribution found for llama-cpp-python==0.3.18` | Same cause — the `--extra-index-url` flag was missing or misspelled | Copy Step 5's command exactly. The full URL is `https://abetlen.github.io/llama-cpp-python/whl/cpu` — no typos, no trailing slash needed |
-| **"Streamlit is not installed"** (or `ModuleNotFoundError: No module named 'streamlit'`, `'llama_cpp'`, `'chromadb'`, etc.) | pip installed into the wrong Python because the `(.venv)` prompt marker was missing when you ran Step 5 — most commonly caused by opening a new PowerShell window mid-flow, or skipping `Activate.ps1` | Reactivate the venv and re-run Step 5. In PowerShell: `cd $HOME\Documents\COEBOT` → `.\.venv\Scripts\Activate.ps1` → confirm the prompt now shows `(.venv)` → then paste Step 5's `pip install --extra-index-url ...` line again. The install is idempotent — it just fills in whatever is missing. Finish with the Step 5 check to confirm |
+| **"Streamlit is not installed"** (or `ModuleNotFoundError: No module named 'streamlit'`, `'llama_cpp'`, `'chromadb'`, etc.) | pip installed into the wrong Python because the `(.venv)` prompt marker was missing when you ran Step 5 — most commonly caused by opening a new PowerShell window mid-flow, or skipping `Activate.ps1` | Reactivate the venv and re-run Step 5. In PowerShell: `cd C:\COEBOT` → `.\.venv\Scripts\Activate.ps1` → confirm the prompt now shows `(.venv)` → then paste Step 5's `pip install --extra-index-url ...` line again. The install is idempotent — it just fills in whatever is missing. Finish with the Step 5 check to confirm |
 | App loads but errors *"No .gguf file found in models/"* | Model file not placed correctly | Confirm the file ends in `.gguf` and is directly inside `models/`, not in a subfolder |
 | Browser shows "This site can't be reached" | Streamlit hasn't finished starting yet | Wait 30 seconds after the terminal opens, then refresh |
 | Chatbot is very slow (< 1 token/sec) | Not enough free RAM, or single-channel memory | Close other apps; if the laptop has one RAM slot filled, adding a matched second stick roughly doubles inference speed |
