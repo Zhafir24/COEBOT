@@ -16,6 +16,15 @@ Windows 10 or 11 already ships with the runtime components COEBOT needs (Visual 
 
 Follow these seven steps in order. Each includes a **check** you can run to verify that step worked, and a note for the most common problem if it didn't.
 
+> **What you install by hand vs. what the computer installs for you:**
+>
+> - You install **two apps manually**: Python (Step 1) and Git (Step 2). That is the full list of installers you download and run.
+> - Python already includes **`pip`** (the package installer used in Step 5) and **`venv`** (the isolation tool used in Step 4). You do **not** download or install pip or venv separately — they come with Python 3.12.
+> - Everything else the chatbot needs — **Streamlit, llama-cpp-python, ChromaDB, sentence-transformers, python-docx, openpyxl, pypdf, pandas, numpy**, and about 190 supporting libraries — is downloaded and installed automatically by the one `pip install` command in Step 5.
+> - The GGUF model file (Step 6) is a third manual download, but it is data (the model itself), not a program.
+>
+> **Order matters:** Python must be installed first because pip and venv only exist after Python is installed. Git can be installed at any time before Step 3. Never install Streamlit, ChromaDB, or any other Python package by itself — Step 5 handles all of them together.
+
 ### Step 1 — Install Python
 
 1. Open https://www.python.org/downloads/ and click the big yellow **Download Python 3.12.x** button.
@@ -26,6 +35,14 @@ Follow these seven steps in order. Each includes a **check** you can run to veri
 **Check:** Press <kbd>Win</kbd> + <kbd>R</kbd>, type `powershell`, press Enter. In the blue window that opens, type `py --version` and press Enter. You should see something like `Python 3.12.7`.
 
 **If you see "'py' is not recognized":** You forgot the PATH checkbox. Uninstall Python from **Settings → Apps**, then reinstall from scratch with the box ticked.
+
+**Note — what you just installed:** the Python installer put three things on your machine at once:
+
+- **`python`** (or `py`) — the language runtime that runs code.
+- **`pip`** — the package installer you'll use in Step 5. Try `pip --version` in PowerShell to confirm.
+- **`venv`** — the virtual environment tool you'll use in Step 4. Ships as a Python module (`python -m venv`).
+
+You do **not** need separate downloads for pip or venv. They come bundled with Python since 2014.
 
 ### Step 2 — Install Git
 
@@ -78,7 +95,16 @@ copy .env.example .env
 
 The `--extra-index-url` flag is **required**. It tells pip to fetch `llama-cpp-python` as a prebuilt binary wheel from the maintainer's own wheel server, because that specific package publishes only source code to PyPI. Without this flag, pip would try to compile 20+ MB of C++ code on your machine and fail unless you happen to have Visual Studio Build Tools installed.
 
-The command downloads and installs about 200 Python packages. It takes **2–5 minutes** depending on your internet speed. Watch the progress; when it finishes you'll see `Successfully installed doc_analyzer-0.1.0 ...`.
+This single command installs **about 200 Python packages** — this is why Streamlit, ChromaDB, and the other libraries do not appear as separate steps. The important ones you might have wondered about:
+
+- **`streamlit`** — the web UI framework that renders the chat interface at `http://127.0.0.1/`.
+- **`llama-cpp-python`** — the in-process LLM engine that loads and runs the GGUF file.
+- **`chromadb`** — the local vector database used for retrieval.
+- **`sentence-transformers`** — downloads the `all-MiniLM-L6-v2` embedding model on first run (~90 MB, one-time).
+- **`python-docx`, `openpyxl`, `pypdf`, `pypdfium2`, `mammoth`** — the document parsers for DOCX, XLSX, and PDF uploads.
+- **`pydantic`, `pydantic-settings`, `python-dotenv`, `pandas`, `numpy`, `diskcache`** — supporting libraries used by the pipeline.
+
+The command takes **2–5 minutes** depending on your internet speed. Watch the progress; when it finishes you'll see something like `Successfully installed doc_analyzer-0.1.0 streamlit-1.xx.x llama-cpp-python-0.3.18 chromadb-0.5.x ...` (with many more names).
 
 **Check:** Type `python -c "import doc_analyzer; print('OK')"` — you should see `OK` printed on the next line.
 
