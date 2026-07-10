@@ -2,6 +2,20 @@
 
 Fully-local document analysis chatbot. Runs Qwen3 (or any GGUF chat model) in-process via `llama-cpp-python`, retrieves context from your own PDFs, DOCXs, and XLSXs, and answers with page-level citations. No API calls. No telemetry. Air-gap deployable.
 
+## 🚀 Easiest install — Portable ZIP (no Python, no Git, no terminal)
+
+**Not a developer? Use this.** Download the portable edition from the
+**[Releases page](https://github.com/Zhafir24/COEBOT/releases/latest)** — it bundles Python and every
+required package, preinstalled:
+
+1. Download `COEBOT-v1.0.0-windows-portable.zip` from [Releases](https://github.com/Zhafir24/COEBOT/releases/latest) and extract it anywhere (e.g. `C:\COEBOT`).
+2. Download the AI model (one click, ~5.6 GB): **[Qwen3.5-9B-UD-Q4_K_XL.gguf](https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-UD-Q4_K_XL.gguf?download=true)** → move the file into the extracted `models\` folder.
+3. Double-click **`start_coebot.bat`**. The browser opens at `http://127.0.0.1/`.
+
+Everything below this line is the **developer install** (editable source, venv, tests). Regular users never need it.
+
+---
+
 ## Prerequisites
 
 Before you start, you need three things installed:
