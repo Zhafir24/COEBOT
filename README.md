@@ -126,20 +126,47 @@ You should see `All 4 packages installed`. If instead you see `ModuleNotFoundErr
 
 ### Step 6 — Download a GGUF model
 
-COEBOT needs a language model file to work. This file is too large to include in the GitHub repo, so you download it separately.
+COEBOT needs a language model file (5–17 GB) to work. This file is too large for the GitHub repo, so you download it separately from Hugging Face. The links below are **direct downloads** — clicking one starts the download immediately in your browser; you don't need to click around on Hugging Face's site.
 
-**For 16 GB RAM laptops** (recommended default):
+#### For 16 GB RAM laptops (recommended default)
 
-1. Open https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/tree/main in your browser.
-2. Find the file named **`Qwen3.5-9B-UD-Q4_K_XL.gguf`** (about 6 GB).
-3. Click the small **⬇ download** icon next to that file.
-4. Wait for the download to finish (10–30 minutes depending on your connection).
-5. Move the downloaded `.gguf` file into the `models/` folder inside your `COEBOT` folder.
+**Model:** `Qwen3.5-9B-UD-Q4_K_XL.gguf` — 5.56 GB
 
-**For 32 GB+ RAM machines** (higher-quality but slower on smaller CPUs):
-Use https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF instead, and download the file with **`Q4_K_M`** in its name (about 19 GB).
+1. Click this direct-download link:
+   **https://huggingface.co/unsloth/Qwen3.5-9B-GGUF/resolve/main/Qwen3.5-9B-UD-Q4_K_XL.gguf?download=true**
 
-**Check:** In PowerShell, type `ls models\*.gguf`. You should see your `.gguf` file listed.
+   Your browser starts downloading immediately. Chrome/Edge may show a "large file" prompt at the bottom of the window — click **Keep** or **Save**. If the link instead opens a Hugging Face page (rare, depends on the browser), find the **⬇ download** button on that page and click it.
+
+2. Wait for the download to finish. It lands in your **Downloads** folder — usually `C:\Users\<yourname>\Downloads\Qwen3.5-9B-UD-Q4_K_XL.gguf`. Expect **10–30 minutes** on a home connection.
+
+3. Move the file into COEBOT's `models\` folder. **Fastest way — in PowerShell:**
+
+   ```powershell
+   move $HOME\Downloads\Qwen3.5-9B-UD-Q4_K_XL.gguf $HOME\Documents\COEBOT\models\
+   ```
+
+   Or by hand: open File Explorer, go to `C:\Users\<yourname>\Documents\COEBOT\models\` in one window and `C:\Users\<yourname>\Downloads\` in another, then drag the `.gguf` file from Downloads into the `models\` window.
+
+#### For 32 GB+ RAM machines (higher-quality but heavier)
+
+**Model:** `Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf` — 17.28 GB
+
+1. Direct-download link:
+   **https://huggingface.co/unsloth/Qwen3-30B-A3B-Instruct-2507-GGUF/resolve/main/Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf?download=true**
+
+2. Same routine as above — the file lands in `Downloads\`, then:
+
+   ```powershell
+   move $HOME\Downloads\Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf $HOME\Documents\COEBOT\models\
+   ```
+
+**Check:** In PowerShell, from inside the COEBOT folder, type:
+
+```powershell
+ls models\*.gguf
+```
+
+You should see one line naming your `.gguf` file with its size. If the output is empty, the model is not in the right place — the file must be **directly inside `models\`**, not in a subfolder like `models\Qwen3.5-9B-GGUF\`. If you accidentally created a subfolder, move the `.gguf` up one level.
 
 ### Step 7 — Launch COEBOT
 
