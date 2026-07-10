@@ -18,23 +18,31 @@ Follow these seven steps in order. Each includes a **check** you can run to veri
 
 > **What you install by hand vs. what the computer installs for you:**
 >
-> - You install **two apps manually**: Python (Step 1) and Git (Step 2). That is the full list of installers you download and run.
+> - You install **two apps manually**: Git (Step 1) and Python (Step 2). That is the full list of installers you download and run.
 > - Python already includes **`pip`** (the package installer used in Step 5) and **`venv`** (the isolation tool used in Step 4). You do **not** download or install pip or venv separately — they come with Python 3.12.
 > - Everything else the chatbot needs — **Streamlit, llama-cpp-python, ChromaDB, sentence-transformers, python-docx, openpyxl, pypdf, pandas, numpy**, and about 190 supporting libraries — is downloaded and installed automatically by the one `pip install` command in Step 5.
 > - The GGUF model file (Step 6) is a third manual download, but it is data (the model itself), not a program.
 >
-> **Order matters:** Python must be installed first because pip and venv only exist after Python is installed. Git can be installed at any time before Step 3. Never install Streamlit, ChromaDB, or any other Python package by itself — Step 5 handles all of them together.
+> **The order between Steps 1 and 2 does not technically matter** — Git and Python are independent installers, neither depends on the other. The steps below put Git first because it is the smaller, faster install and immediately gives you the `git clone` command you need for Step 3. The real ordering rule is later: Git must exist before **Step 3** (clone) and Python must exist before **Step 4** (virtual environment). Never install Streamlit, ChromaDB, or any other Python package by itself — Step 5 handles all of them together.
 
-### Step 1 — Install Python
+### Step 1 — Install Git
+
+1. Open https://git-scm.com/download/win — the download will start automatically.
+2. Run the installer you just downloaded.
+3. Click **Next** on every screen to accept the defaults. Do not change anything.
+
+**Check:** Press <kbd>Win</kbd> + <kbd>R</kbd>, type `powershell`, press Enter. In the blue window that opens, type `git --version` and press Enter. You should see `git version 2.4x.x` or similar. Keep this PowerShell window open — you will use it for the rest of the steps.
+
+### Step 2 — Install Python
 
 1. Open https://www.python.org/downloads/ and click the big yellow **Download Python 3.12.x** button.
 2. Run the installer you just downloaded.
 3. **CRITICAL:** On the very first installer screen, at the bottom, tick the checkbox **"Add python.exe to PATH"**. If you skip this, nothing later will work.
 4. Click **Install Now** and wait for it to finish.
 
-**Check:** Press <kbd>Win</kbd> + <kbd>R</kbd>, type `powershell`, press Enter. In the blue window that opens, type `py --version` and press Enter. You should see something like `Python 3.12.7`.
+**Check:** In your open PowerShell window, type `py --version` and press Enter. You should see something like `Python 3.12.7`.
 
-**If you see "'py' is not recognized":** You forgot the PATH checkbox. Uninstall Python from **Settings → Apps**, then reinstall from scratch with the box ticked.
+**If you see "'py' is not recognized":** You forgot the PATH checkbox during install, **or** the PowerShell window was open before Python was installed and did not pick up the new PATH. Try closing and reopening PowerShell first. If it still fails, uninstall Python from **Settings → Apps**, then reinstall from scratch with the checkbox ticked.
 
 **Note — what you just installed:** the Python installer put three things on your machine at once:
 
@@ -43,14 +51,6 @@ Follow these seven steps in order. Each includes a **check** you can run to veri
 - **`venv`** — the virtual environment tool you'll use in Step 4. Ships as a Python module (`python -m venv`).
 
 You do **not** need separate downloads for pip or venv. They come bundled with Python since 2014.
-
-### Step 2 — Install Git
-
-1. Open https://git-scm.com/download/win — the download will start automatically.
-2. Run the installer.
-3. Click **Next** on every screen to accept the defaults. Do not change anything.
-
-**Check:** In PowerShell, type `git --version`. You should see `git version 2.4x.x` or similar.
 
 ### Step 3 — Download COEBOT from GitHub
 
