@@ -14,6 +14,8 @@ required package, preinstalled:
 
 Everything below this line is the **developer install** (editable source, venv, tests). Regular users never need it.
 
+> **Developers:** the portable edition's launcher, end-user readme, and reproducible build script live in [`portable/`](portable/) — that folder is the source of truth for what ships in the release ZIP.
+
 ---
 
 ## Prerequisites
