@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "doc_analyzer"
-version = "0.1.0"
+version = "1.1.0"
 description = "COEBOT — local document analysis chatbot for enterprise use (RAG over PDFs, DOCXs, XLSXs)."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -40,7 +40,11 @@ dependencies = [
     "llama-cpp-python==0.3.18",
     "chromadb>=0.5.0,<2.0",
     "sentence-transformers>=3.0.0,<5.0",
-    "streamlit>=1.35.0,<2.0",
+    # Pinned band: the sidebar CSS targets Streamlit's DOM (testids +
+    # wrapper structure), which changed in 1.58. The UI is built and
+    # tested against 1.58/1.59; an untested framework jump silently
+    # breaks layout (learned the hard way).
+    "streamlit>=1.58.0,<1.60",
     "pydantic>=2.6.0,<3.0",
     "pydantic-settings>=2.2.0,<3.0",
     "python-dotenv>=1.0.0,<2.0",

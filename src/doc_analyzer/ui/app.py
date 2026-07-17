@@ -182,7 +182,14 @@ def _load_current_chat_id() -> str | None:
 
 
 def _save_current_chat_id(chat_id: str | None) -> None:
-    """Persist (or clear) the currently-viewed chat id."""
+    """Persist (or clear) the currently-viewed chat id.
+
+    Skipped in Nobody mode: the temporary session leaves the pointer
+    at the last recorded chat, so a refresh restores that one (the
+    temporary conversation is untracked by design).
+    """
+    if not st.session_state.get("recording", True):
+        return
     try:
         _CURRENT_CHAT_PATH.parent.mkdir(parents=True, exist_ok=True)
         if chat_id is None:
@@ -239,8 +246,13 @@ def _derive_chat_title(messages: list[dict]) -> str:
 def _persist_current_chat() -> None:
     """Save the in-memory active chat to disk.
 
-    No-op if there is no current chat id or no messages yet.
+    No-op if there is no current chat id or no messages yet, or when
+    the session is in Nobody mode (temporary session — every persist
+    path funnels through here, so this single guard keeps temporary
+    conversations off the disk entirely).
     """
+    if not st.session_state.get("recording", True):
+        return
     chat_id = st.session_state.get("current_chat_id")
     messages = st.session_state.get("messages", [])
     if not chat_id or not messages:
@@ -270,13 +282,19 @@ def _start_new_chat() -> None:
 
 
 def _switch_to_chat(chat_id: str) -> None:
-    """Save the current chat then load and activate another one."""
+    """Save the current chat then load and activate another one.
+
+    Opening a recorded chat always exits Nobody mode — otherwise
+    follow-up messages in a saved chat would silently go unrecorded.
+    The temporary conversation (if any) is discarded by design.
+    """
     if st.session_state.get("current_chat_id") == chat_id:
         return
     _persist_current_chat()
     chat = _load_chat(chat_id)
     if chat is None:
         return
+    st.session_state.recording = True
     st.session_state.current_chat_id = chat_id
     st.session_state.current_chat_created_at = chat.get("created_at")
     st.session_state.messages = list(chat.get("messages", []))
@@ -314,7 +332,13 @@ def _load_pending_attachments() -> list[str]:
 
 
 def _save_pending_attachments(names: list[str]) -> None:
-    """Persist the pending chip-rail attachments to disk. Best-effort."""
+    """Persist the pending chip-rail attachments to disk. Best-effort.
+
+    Skipped in Nobody mode — temporary sessions keep chips in memory
+    only.
+    """
+    if not st.session_state.get("recording", True):
+        return
     try:
         _PENDING_PATH.parent.mkdir(parents=True, exist_ok=True)
         tmp = _PENDING_PATH.with_suffix(_PENDING_PATH.suffix + ".tmp")
@@ -835,7 +859,7 @@ _CHAT_UPLOAD_JS = """
 
   // Each helper is wrapped so one throw can't kill the rest of the
   // pipeline. Without this, a stale reference inside (for example)
-  // pushSignOutUp during a Streamlit rerun could abort runAll
+  // ensureModelPill during a Streamlit rerun could abort runAll
   // mid-pass and leave the page in a half-mutated "white" state until
   // a manual refresh re-initializes everything.
   function safeCall(fn, label) {
@@ -844,47 +868,12 @@ _CHAT_UPLOAD_JS = """
       try { console.warn('[COEBOT] ' + label + ' failed:', err); } catch (e) {}
     }
   }
-  // Lift the sidebar content block up by 2.5rem so the Sign Out
-  // button sits comfortably above the sidebar's bottom edge.
-  // transform:translateY is used (not margin/padding) because every
-  // CSS layout-based approach was silently absorbed by Streamlit's
-  // internal styles; transform is a render-time visual offset that
-  // bypasses layout entirely. Inline-style with !important wins over
-  // any external stylesheet rule. NOT DOM surgery — just sets a
-  // style on an existing element, so cannot race with React.
-  function pushSignOutUp() {
-    var D = window.parent.document;
-    var sidebar = D.querySelector('section[data-testid="stSidebar"]');
-    if (!sidebar) return;
-    var buttons = sidebar.querySelectorAll('button');
-    var signoutBtn = null;
-    for (var i = 0; i < buttons.length; i++) {
-      if ((buttons[i].textContent || '').trim() === 'Sign out') {
-        signoutBtn = buttons[i];
-        break;
-      }
-    }
-    if (!signoutBtn) return;
-
-    var mainBlock = sidebar.querySelector(
-      '[data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"]'
-    );
-    if (!mainBlock) {
-      mainBlock = sidebar.querySelector('[data-testid="stSidebarUserContent"]');
-    }
-    if (!mainBlock) return;
-
-    var wrapper = signoutBtn;
-    var depth = 0;
-    while (wrapper.parentElement && wrapper.parentElement !== mainBlock && depth < 20) {
-      wrapper = wrapper.parentElement;
-      depth++;
-    }
-    if (wrapper === signoutBtn || !wrapper.parentElement) return;
-    if (wrapper.dataset.ccSignoutLifted === '1') return;
-    wrapper.style.setProperty('transform', 'translateY(-2.5rem)', 'important');
-    wrapper.dataset.ccSignoutLifted = '1';
-  }
+  // (pushSignOutUp removed: Sign out visibility is now guaranteed by
+  // CSS alone — the sidebar flex column pins the profile group inside
+  // the scrollport via min-height:100%; see styles.py "Profile
+  // pinning". The old JS lifted the group by a fixed -2.5rem, which
+  // only matched some window sizes and left the button below the
+  // fold at others.)
 
   // Chevron down icon for the model pill's dropdown indicator.
   var CHEVRON_DOWN = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
@@ -1175,7 +1164,6 @@ _CHAT_UPLOAD_JS = """
     safeCall(syncChipRail, 'syncChipRail');
     safeCall(killBottomBg, 'killBottomBg');
     safeCall(disableChatMessageButtonKeyboard, 'disableChatMessageButtonKeyboard');
-    safeCall(pushSignOutUp, 'pushSignOutUp');
     safeCall(ensureModelPill, 'ensureModelPill');
   }
 
@@ -1204,9 +1192,9 @@ _CHAT_UPLOAD_JS = """
   // killBottomBg re-runs on the next tick, and re-run setup.
   try {
     var D = window.parent.document;
-    // Watch the sidebar shallowly so pushSignOutUp re-applies its
-    // inline margin after each Streamlit rerun replaces the sign-out
-    // button's wrapper. Shallow (subtree:false) keeps it cheap.
+    // Watch the sidebar shallowly so the setup functions re-apply
+    // after each Streamlit rerun replaces sidebar wrappers. Shallow
+    // (subtree:false) keeps it cheap.
     var targets = [
       D.querySelector('[data-testid="stBottom"]'),
       D.querySelector('[data-testid="stMain"]'),
@@ -2480,14 +2468,29 @@ def _render_main(user: str) -> None:
             with st.spinner(_spinner_text):
                 llm = _llm_client(_sel_model)
                 st.session_state.warm_models.add(_sel_model)
-                mem_facts = _memory().facts()
+                # Nobody mode: memory is neither read nor written —
+                # "nothing saved or remembered".
+                mem_facts = (
+                    _memory().facts() if st.session_state.recording else []
+                )
                 remember_match = _REMEMBER_CMD_RE.match(question)
                 if remember_match and not chat_doc_names:
-                    # Explicit memory command — store instantly, no LLM.
-                    fact = remember_match.group(1).strip()
-                    if _memory().add(fact):
+                    if not st.session_state.recording:
                         answer = Answer(
-                            text=f"✅ Tersimpan / Saved to memory: *{fact}*",
+                            text=(
+                                "○ Mode Nobody — tidak ada yang disimpan. / "
+                                "Nobody mode — nothing is saved or "
+                                "remembered in a temporary session."
+                            ),
+                            sources=(),
+                        )
+                    # Explicit memory command — store instantly, no LLM.
+                    elif _memory().add(remember_match.group(1).strip()):
+                        answer = Answer(
+                            text=(
+                                "✅ Tersimpan / Saved to memory: "
+                                f"*{remember_match.group(1).strip()}*"
+                            ),
                             sources=(),
                         )
                     else:
@@ -2565,7 +2568,8 @@ def _render_main(user: str) -> None:
         # Runs AFTER the answer is already on screen; gated by a regex
         # so the extra (CPU-costly) LLM pass is rare.
         if (
-            remember_match is None
+            st.session_state.recording
+            and remember_match is None
             and not response_text.startswith("⚠️")
             and _PERSONAL_SIGNAL_RE.search(question)
         ):
@@ -2590,7 +2594,16 @@ def _render_main(user: str) -> None:
             key="mode_recording",
             use_container_width=True,
         ):
-            st.session_state.recording = True
+            if not st.session_state.recording:
+                # Leaving Nobody: the temporary conversation is
+                # discarded (it was never written anywhere), and a
+                # fresh recorded chat starts.
+                st.session_state.recording = True
+                st.session_state.current_chat_id = None
+                st.session_state.current_chat_created_at = None
+                st.session_state.messages = []
+                st.session_state.pending_question = None
+                st.session_state.pending_attachments = []
             st.rerun()
         st.caption("Everything is saved to this device.")
 
@@ -2600,7 +2613,17 @@ def _render_main(user: str) -> None:
             key="mode_nobody",
             use_container_width=True,
         ):
-            st.session_state.recording = False
+            if st.session_state.recording:
+                # Entering Nobody: save the recorded chat FIRST (the
+                # persist guard still allows writes at this point),
+                # then open a blank temporary conversation.
+                _persist_current_chat()
+                st.session_state.recording = False
+                st.session_state.current_chat_id = None
+                st.session_state.current_chat_created_at = None
+                st.session_state.messages = []
+                st.session_state.pending_question = None
+                st.session_state.pending_attachments = []
             st.rerun()
         st.caption("Temporary session — nothing saved or remembered.")
 

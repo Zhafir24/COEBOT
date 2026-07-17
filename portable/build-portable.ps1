@@ -20,7 +20,7 @@ $ErrorActionPreference = "Stop"
 
 $PYTHON_EMBED_URL = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip"
 $WHEEL_INDEX      = "https://abetlen.github.io/llama-cpp-python/whl/cpu"
-$VERSION          = "v1.0.0"
+$VERSION          = "v1.1.0"
 
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 $Work     = Join-Path $RepoRoot "dist\portable-build"

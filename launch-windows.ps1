@@ -54,6 +54,14 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Put the venv's Scripts dir first on PATH (equivalent to activation).
+# Streamlit 1.58+ runs the app in a child process that it spawns by
+# looking up "python" on PATH — without this line the lookup finds the
+# system-wide Python and the app runs on the wrong interpreter (which
+# may lack packages or run different versions).
+$env:PATH = "$ProjectRoot\.venv\Scripts;" + $env:PATH
+$env:VIRTUAL_ENV = "$ProjectRoot\.venv"
+
 Write-Host ""
 Write-Host "Starting COEBOT..." -ForegroundColor Cyan
 Write-Host "Browser will open at $Url in a few seconds." -ForegroundColor DarkGray

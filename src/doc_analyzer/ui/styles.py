@@ -240,39 +240,153 @@ section[data-testid="stSidebar"] > div:first-child {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0 1rem 0.75rem 1rem;
-  margin: -42px -0.5rem 0.5rem -0.5rem;
+  padding: 0 1rem 0.5rem 1rem;
+  /* -42px was calibrated for the old 168px logo; the 120px logo is
+     shorter and gets clipped into the header at that offset. */
+  margin: -8px -0.5rem 0.25rem -0.5rem;
   border-bottom: 1px solid var(--border);
 }
 
 .sidebar-logo svg {
-  width: 168px;
+  width: 145px;
   height: auto;
   display: block;
 }
 
-/* ---------- Profile pinning (CSS-only, no JS DOM surgery) ----------
-   Make the sidebar's top-level vertical block a flex column that fills
-   the viewport. Then mark the wrapper that contains the .user-row
-   markdown with margin-top:auto so it (and everything after it — the
-   Sign out button) gets pushed to the bottom. This replaces the old
-   pinProfileToBottom() JS, which fought React's reconciler and caused
-   the "white page after delete" race. */
-section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]
-  > [data-testid="stVerticalBlock"] {
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: calc(100vh - 2rem) !important;
+/* ---------- App canvas clamp (Streamlit 1.58 sizing bug) ----------
+   Streamlit 1.58 sizes stAppViewContainer from screen-derived
+   dimensions instead of the window, so whenever the browser window is
+   shorter than the physical screen (taskbar, non-maximized window)
+   the canvas is TALLER than the window and stApp's overflow:hidden
+   clips the bottom strip — including the sidebar's profile group.
+   Clamp the canvas to the real viewport; inner scrollers handle
+   overflow as designed. */
+[data-testid="stAppViewContainer"] {
+  height: 100vh !important;
+  max-height: 100vh !important;
 }
 
-/* Push the profile group (user-row markdown + Sign out button) to
-   the bottom of the sidebar's flex column. The actual bottom-edge
-   breathing room is applied by JS (pushSignOutUp) because every
-   CSS-based padding approach has been silently absorbed by
-   Streamlit's internal layout. */
+/* ---------- Claude-style sidebar layout (single inner scroller) ----
+   Design contract, matching claude.ai's sidebar:
+   - The sidebar itself NEVER scrolls (no outer scrollbar).
+   - The recents list is the one flexible region: it absorbs exactly
+     the leftover vertical space and scrolls internally.
+   - Logo, "+ New Chat", RECENTS header, Memory, and the profile
+     group (user-row + Sign out) are always visible; the profile is
+     welded to the bottom.
+
+   The recents list comes from st.container(height=320) in app.py;
+   the inline 320px is overridden here (flex sizing wins via
+   !important) so the region is elastic instead of fixed.
+
+   Selectors are written for both sidebar DOM shapes: pre-1.58
+   (stSidebarUserContent > stVerticalBlock) and 1.58+ (an anonymous
+   wrapper div in between). */
+
+/* 1. Sidebar column: fill and clip — no outer scrollbar, ever. */
+[data-testid="stSidebarContent"] {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+[data-testid="stSidebarUserContent"] {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  /* Streamlit 1.58 ships ~6rem bottom padding here; with the sidebar
+     height chain that renders as dead space under Sign out. */
+  padding-bottom: 0.75rem !important;
+}
+
+/* 2. Height chain down to the main vertical block (covers the 1.58
+   anonymous wrapper and the older direct-child shape). */
+[data-testid="stSidebarUserContent"] > div {
+  height: 100% !important;
+}
+[data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"],
+[data-testid="stSidebarUserContent"] > div > [data-testid="stVerticalBlock"] {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+/* 3. Fixed rows stay their natural size (logo, New Chat, header,
+   Memory, profile) — never squashed by the flex column. */
+[data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"] > *,
+[data-testid="stSidebarUserContent"] > div > [data-testid="stVerticalBlock"] > * {
+  flex: 0 0 auto;
+}
+
+/* 4. The recents wrapper is the elastic scroll region. Identified by
+   containing chat-row buttons (key=f"open_chat_{cid}" → class
+   st-key-open_chat_*). CRITICAL: the :has() must be anchored as a
+   DIRECT CHILD of the sidebar's main vertical block — every chat
+   row's own stLayoutWrapper also :has() an open_chat button, and an
+   unanchored selector flattens all rows to height 0. Its inner
+   stVerticalBlock carries st.container's inline height:320px —
+   height:100% !important beats the inline style, and the region
+   scrolls internally. */
+[data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"]
+  > [data-testid="stLayoutWrapper"]:has([class*="st-key-open_chat"]),
+[data-testid="stSidebarUserContent"] > div > [data-testid="stVerticalBlock"]
+  > [data-testid="stLayoutWrapper"]:has([class*="st-key-open_chat"]) {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+}
+[data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"]
+  > [data-testid="stLayoutWrapper"]:has([class*="st-key-open_chat"]) > div,
+[data-testid="stSidebarUserContent"] > div > [data-testid="stVerticalBlock"]
+  > [data-testid="stLayoutWrapper"]:has([class*="st-key-open_chat"]) > div {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+}
+
+/* 5. Profile group welded to the bottom. With the outer scrollbar
+   gone this is pure flex — no sticky, no viewport math, no JS. */
 section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]
-  > [data-testid="stVerticalBlock"] > *:has(.user-row) {
+  > [data-testid="stVerticalBlock"] > *:has(.user-row),
+section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]
+  > div > [data-testid="stVerticalBlock"] > *:has(.user-row) {
   margin-top: auto !important;
+}
+
+/* 6. Density pass — Claude-reference proportions. The recents region
+   only gets whatever the fixed elements leave over, so the fixed
+   elements must be compact: tight column gaps, single-line rows. */
+[data-testid="stSidebarUserContent"] > [data-testid="stVerticalBlock"],
+[data-testid="stSidebarUserContent"] > div > [data-testid="stVerticalBlock"] {
+  gap: 0.25rem !important;
+}
+
+/* Chat rows: compact, single-line with ellipsis, left-aligned —
+   like claude.ai's recents. Applies to the title button; the ×
+   delete button stays its natural size beside it. */
+section[data-testid="stSidebar"] [class*="st-key-open_chat"] button {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  min-height: 34px !important;
+  padding: 0.2rem 0.6rem !important;
+}
+section[data-testid="stSidebar"] [class*="st-key-open_chat"] button p {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+  /* The button aligns flex-start, but the inner <p> carries its own
+     centering — both must be left for the Claude-style row. */
+  text-align: left !important;
+}
+section[data-testid="stSidebar"] [class*="st-key-del_chat"] button {
+  min-height: 34px !important;
+  padding: 0.2rem 0.4rem !important;
+}
+
+/* Tighter vertical rhythm between rows inside the recents scroller. */
+[data-testid="stSidebarUserContent"] [data-testid="stLayoutWrapper"]:has([class*="st-key-open_chat"])
+  [data-testid="stVerticalBlock"] {
+  gap: 0.125rem !important;
 }
 
 .recents-header {
@@ -281,8 +395,8 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #9CA3AF;
-  padding: 14px 8px 6px 8px;
-  margin-top: 4px;
+  padding: 6px 8px 2px 8px;
+  margin-top: 0;
 }
 
 /* JS-injected chip rail sitting just above the textarea inside the
@@ -328,9 +442,9 @@ section[data-testid="stSidebar"] [data-testid="stSidebarUserContent"]
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.85rem 0.5rem 0.5rem 0.5rem;
+  padding: 0.6rem 0.5rem 0.35rem 0.5rem;
   border-top: 1px solid var(--border);
-  margin-top: 1.25rem;
+  margin-top: 0.5rem;
 }
 
 .user-row .left {
