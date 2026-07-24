@@ -25,9 +25,7 @@ def _fake_response(content: str) -> dict[str, Any]:
     return {"choices": [{"message": {"role": "assistant", "content": content}}]}
 
 
-def _build_client(
-    tmp_path: Path, **overrides: Any
-) -> tuple[LlmClient, MagicMock]:
+def _build_client(tmp_path: Path, **overrides: Any) -> tuple[LlmClient, MagicMock]:
     """Build an LlmClient with a mocked Llama instance.
 
     A dummy `.gguf` file is created at ``tmp_path`` so the client's
@@ -194,12 +192,12 @@ class TestPrefixKVCache:
     def test_covered_prefix_is_not_stored_again(self, tmp_path: Path) -> None:
         cache = _make_cache(tmp_path)
         base = list(range(100))
-        cache[base + [201, 202]] = "first-question"
+        cache[[*base, 201, 202]] = "first-question"
         # Second question about the same document: 100 of 103 tokens
         # (~97%) already covered — must be a no-op, not a second
         # multi-GB write.
-        cache[base + [301, 302, 303]] = "second-question"
-        assert cache[base + [999]] == "first-question"
+        cache[[*base, 301, 302, 303]] = "second-question"
+        assert cache[[*base, 999]] == "first-question"
 
     def test_uncovered_prefix_is_stored(self, tmp_path: Path) -> None:
         cache = _make_cache(tmp_path)
@@ -222,9 +220,7 @@ class TestPrefixKVCache:
         cache[[6, 7, 8, 9, 10]] = big
         cache[[11, 12, 13, 14, 15]] = big
         stored = sum(
-            1
-            for key in ([1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15])
-            if key in cache
+            1 for key in ([1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [11, 12, 13, 14, 15]) if key in cache
         )
         assert stored < 3
         assert [11, 12, 13, 14, 15] in cache  # newest survives

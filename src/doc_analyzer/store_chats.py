@@ -15,11 +15,13 @@ timestamp (older chats without one render without times).
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 CHATS_DIR = _PROJECT_ROOT / "data" / "chats"
@@ -46,7 +48,7 @@ def _chat_path(chat_id: str) -> Path | None:
     return CHATS_DIR / f"{chat_id}.json"
 
 
-def derive_title(messages: list[dict]) -> str:
+def derive_title(messages: list[dict[str, Any]]) -> str:
     """First user message becomes the title, truncated to ~50 chars."""
     for msg in messages:
         if msg.get("role") == "user":
@@ -56,7 +58,7 @@ def derive_title(messages: list[dict]) -> str:
     return "New chat"
 
 
-def serialize_message(msg: dict) -> dict:
+def serialize_message(msg: dict[str, Any]) -> dict[str, Any]:
     """JSON-safe copy of a message (sources become plain dicts)."""
     out = {
         "role": msg.get("role"),
@@ -84,7 +86,7 @@ def serialize_message(msg: dict) -> dict:
     return out
 
 
-def write_chat(chat: dict) -> None:
+def write_chat(chat: dict[str, Any]) -> None:
     path = _chat_path(chat["id"])
     if path is None:
         return
@@ -94,14 +96,15 @@ def write_chat(chat: dict) -> None:
     tmp.replace(path)
 
 
-def load_chat(chat_id: str) -> dict | None:
+def load_chat(chat_id: str) -> dict[str, Any] | None:
     path = _chat_path(chat_id)
     if path is None or not path.exists():
         return None
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        loaded = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return None
+    return loaded if isinstance(loaded, dict) else None
 
 
 def delete_chat(chat_id: str) -> bool:
@@ -117,11 +120,11 @@ def delete_chat(chat_id: str) -> bool:
 
 def persist_messages(
     chat_id: str,
-    messages: list[dict],
+    messages: list[dict[str, Any]],
     *,
     created_at: str | None = None,
     favorite: bool | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Write the full chat; preserves created_at/favorite of an
     existing file unless overridden. Returns the stored chat dict."""
     existing = load_chat(chat_id) or {}
@@ -129,9 +132,7 @@ def persist_messages(
     chat = {
         "id": chat_id,
         "title": derive_title(messages),
-        "favorite": (
-            favorite if favorite is not None else bool(existing.get("favorite"))
-        ),
+        "favorite": (favorite if favorite is not None else bool(existing.get("favorite"))),
         "created_at": created_at or existing.get("created_at") or now,
         "updated_at": now,
         "messages": [serialize_message(m) for m in messages],
@@ -149,11 +150,11 @@ def set_favorite(chat_id: str, on: bool) -> bool:
     return True
 
 
-def list_chats() -> list[dict]:
+def list_chats() -> list[dict[str, Any]]:
     """Chat summaries, newest first."""
     if not CHATS_DIR.exists():
         return []
-    items: list[dict] = []
+    items: list[dict[str, Any]] = []
     for p in CHATS_DIR.glob("*.json"):
         try:
             d = json.loads(p.read_text(encoding="utf-8"))
@@ -175,7 +176,7 @@ def list_chats() -> list[dict]:
 # --- device-level pointers (same semantics as the old UI) -------------
 
 
-def _read_json(path: Path, default):
+def _read_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
     try:
@@ -184,7 +185,7 @@ def _read_json(path: Path, default):
         return default
 
 
-def _write_json(path: Path, data) -> None:
+def _write_json(path: Path, data: Any) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         tmp = path.with_suffix(path.suffix + ".tmp")
@@ -195,15 +196,15 @@ def _write_json(path: Path, data) -> None:
 
 
 def load_current_chat_id() -> str | None:
-    return _read_json(CURRENT_CHAT_PATH, {}).get("chat_id")
+    data = _read_json(CURRENT_CHAT_PATH, {})
+    value = data.get("chat_id") if isinstance(data, dict) else None
+    return str(value) if value else None
 
 
 def save_current_chat_id(chat_id: str | None) -> None:
     if chat_id is None:
-        try:
+        with contextlib.suppress(OSError):
             CURRENT_CHAT_PATH.unlink(missing_ok=True)
-        except OSError:
-            pass
         return
     _write_json(CURRENT_CHAT_PATH, {"chat_id": chat_id})
 

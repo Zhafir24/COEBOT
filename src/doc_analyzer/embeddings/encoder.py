@@ -99,9 +99,7 @@ class Embedder:
             logger.info("Loading embedding model from bundled path %s ...", source)
         else:
             source = self._model_name
-            logger.info(
-                "Loading embedding model %s from HF cache ...", self._model_name
-            )
+            logger.info("Loading embedding model %s from HF cache ...", self._model_name)
         # local_files_only=True forbids any network call to the HF Hub.
         # This complements HF_HUB_OFFLINE=1 set in doc_analyzer/__init__.py.
         self._model = SentenceTransformer(source, local_files_only=True)

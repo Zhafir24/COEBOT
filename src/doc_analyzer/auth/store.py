@@ -83,21 +83,15 @@ class UserStore:
         password = password or ""
 
         if len(username) < _MIN_USERNAME_LEN:
-            raise UserStoreError(
-                f"Username must be at least {_MIN_USERNAME_LEN} characters."
-            )
+            raise UserStoreError(f"Username must be at least {_MIN_USERNAME_LEN} characters.")
         if len(username) > _MAX_USERNAME_LEN:
-            raise UserStoreError(
-                f"Username must be at most {_MAX_USERNAME_LEN} characters."
-            )
+            raise UserStoreError(f"Username must be at most {_MAX_USERNAME_LEN} characters.")
         if not username.replace("_", "").replace("-", "").isalnum():
             raise UserStoreError(
                 "Username may only contain letters, digits, underscores, or hyphens."
             )
         if len(password) < _MIN_PASSWORD_LEN:
-            raise UserStoreError(
-                f"Password must be at least {_MIN_PASSWORD_LEN} characters."
-            )
+            raise UserStoreError(f"Password must be at least {_MIN_PASSWORD_LEN} characters.")
         if self.get(username) is not None:
             raise UserStoreError(f"Username '{username}' is already taken.")
 
@@ -148,9 +142,10 @@ class UserStore:
         if not self._path.exists():
             return {}
         try:
-            return json.loads(self._path.read_text(encoding="utf-8"))
+            loaded = json.loads(self._path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return {}
+        return loaded if isinstance(loaded, dict) else {}
 
     def _save(self, data: dict[str, Any]) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
@@ -207,9 +202,10 @@ class ActiveSessionStore:
         if not self._path.exists():
             return None
         try:
-            return json.loads(self._path.read_text(encoding="utf-8"))
+            loaded = json.loads(self._path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return None
+        return loaded if isinstance(loaded, dict) else None
 
     def _save(self, data: dict[str, Any]) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)

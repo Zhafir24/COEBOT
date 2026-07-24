@@ -37,9 +37,7 @@ _THINK_TAG_PATTERN = re.compile(r"<think>.*?</think>", re.DOTALL)
 # explanations) finish instead of truncating mid-sentence.
 _DEFAULT_MAX_TOKENS = 3072
 
-_TRUNCATION_NOTE = (
-    "\n\n⚠️ *(Output reached the length limit — say \"continue\" to get the rest.)*"
-)
+_TRUNCATION_NOTE = '\n\n⚠️ *(Output reached the length limit — say "continue" to get the rest.)*'
 
 
 class ChatMessage(TypedDict):
@@ -100,7 +98,7 @@ class PrefixKVCache:
     @staticmethod
     def _shared_prefix_len(a: Sequence[int], b: Sequence[int]) -> int:
         n = 0
-        for x, y in zip(a, b):
+        for x, y in zip(a, b, strict=False):
             if x != y:
                 break
             n += 1
@@ -125,7 +123,7 @@ class PrefixKVCache:
         if self._live_tokens_fn is not None:
             try:
                 live_len = self._shared_prefix_len(self._live_tokens_fn(), key)
-            except Exception:  # noqa: BLE001 — advisory check only
+            except Exception:  # advisory check only
                 live_len = 0
             if live_len >= best_len:
                 raise KeyError("live context already covers the cached prefix")
@@ -190,9 +188,7 @@ class LlmClient:
         # client is actually constructed (rather than at module import).
         from llama_cpp import Llama
 
-        logger.info(
-            "Loading GGUF model from %s (n_gpu_layers=%d) ...", model_path, n_gpu_layers
-        )
+        logger.info("Loading GGUF model from %s (n_gpu_layers=%d) ...", model_path, n_gpu_layers)
         self._llm: Llama = Llama(
             model_path=str(model_path),
             n_ctx=n_ctx,
@@ -215,19 +211,22 @@ class LlmClient:
         if kv_cache_dir is not None:
             try:
                 kv_cache_dir.mkdir(parents=True, exist_ok=True)
-                self._llm.set_cache(
-                    PrefixKVCache(
-                        str(kv_cache_dir),
-                        capacity_bytes=kv_cache_bytes,
-                        live_tokens_fn=lambda: self._llm._input_ids.tolist(),
-                    )
+                # PrefixKVCache duck-types the llama_cpp cache protocol
+                # (__getitem__ / __setitem__ / __contains__); it does not
+                # inherit from BaseLlamaCache. Behaviorally verified in the
+                # test suite; mypy can't see the duck-typed contract.
+                custom_cache = PrefixKVCache(
+                    str(kv_cache_dir),
+                    capacity_bytes=kv_cache_bytes,
+                    live_tokens_fn=lambda: self._llm._input_ids.tolist(),
                 )
+                self._llm.set_cache(custom_cache)  # type: ignore[arg-type]
                 logger.info(
                     "KV disk cache enabled at %s (cap %.1f GB)",
                     kv_cache_dir,
                     kv_cache_bytes / 1024**3,
                 )
-            except Exception:  # noqa: BLE001 — cache is an optimization only
+            except Exception:  # cache is an optimization only
                 logger.warning(
                     "KV disk cache unavailable — continuing without it",
                     exc_info=True,
@@ -280,24 +279,27 @@ class LlmClient:
             raise ValueError("chat() requires at least one message")
 
         try:
+            # llama_cpp types messages as a narrow Union of per-role
+            # message TypedDicts; ChatMessage is the flat superset our
+            # callers actually use.
             response = self._llm.create_chat_completion(
-                messages=list(messages),
+                messages=list(messages),  # type: ignore[arg-type]
                 temperature=temperature,
                 max_tokens=num_predict if num_predict is not None else self._max_tokens,
             )
-        except Exception as exc:  # noqa: BLE001 — wrap and re-raise
+        except Exception as exc:  # wrap and re-raise
             logger.exception("llama_cpp chat completion failed")
             raise LlmClientError(f"llama_cpp inference failed: {exc}") from exc
 
         # llama_cpp mirrors OpenAI's response schema:
         # {"choices": [{"message": {"role": "assistant", "content": "..."}}], ...}
+        # The return type is a Union of non-streaming dict and streaming
+        # iterator; we never stream, so treat it as the dict form.
         try:
-            choice = response["choices"][0]
+            choice = response["choices"][0]  # type: ignore[index]
             content = choice["message"]["content"] or ""
         except (KeyError, IndexError, TypeError) as exc:
-            raise LlmClientError(
-                f"Unexpected response shape from llama_cpp: {response!r}"
-            ) from exc
+            raise LlmClientError(f"Unexpected response shape from llama_cpp: {response!r}") from exc
 
         if self._strip_think_tags:
             content = _THINK_TAG_PATTERN.sub("", content)

@@ -217,11 +217,7 @@ class TestMemoryPlacement:
         user_msg = next(m for m in messages if m["role"] == "user")
         assert self._FACT not in system_msg["content"]
         content = user_msg["content"]
-        assert (
-            content.index("page one")
-            < content.index(self._FACT)
-            < content.index("QUESTION:")
-        )
+        assert content.index("page one") < content.index(self._FACT) < content.index("QUESTION:")
 
     def test_no_memory_block_when_no_facts(self, settings: Settings) -> None:
         embedder = MagicMock()
@@ -232,9 +228,7 @@ class TestMemoryPlacement:
         llm = MagicMock()
         llm.chat.return_value = "ok"
 
-        answer_question(
-            "Q?", embedder=embedder, store=store, llm=llm, settings=settings
-        )
+        answer_question("Q?", embedder=embedder, store=store, llm=llm, settings=settings)
 
         user_msg = next(m for m in llm.chat.call_args.args[0] if m["role"] == "user")
         assert "KNOWN FACTS" not in user_msg["content"]

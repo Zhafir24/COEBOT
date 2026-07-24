@@ -26,7 +26,7 @@ class UserMemory:
     def __init__(self, path: Path) -> None:
         self._path = path
 
-    def load(self) -> list[dict]:
+    def load(self) -> list[dict[str, str]]:
         """Return all stored fact records (newest first)."""
         if not self._path.exists():
             return []
@@ -74,13 +74,11 @@ class UserMemory:
         """Delete every stored fact."""
         self._write([])
 
-    def _write(self, records: list[dict]) -> None:
+    def _write(self, records: list[dict[str, str]]) -> None:
         try:
             self._path.parent.mkdir(parents=True, exist_ok=True)
             tmp = self._path.with_suffix(self._path.suffix + ".tmp")
-            tmp.write_text(
-                json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8"
-            )
+            tmp.write_text(json.dumps(records, indent=2, ensure_ascii=False), encoding="utf-8")
             tmp.replace(self._path)
         except OSError:
             logger.warning("Could not write memory file %s", self._path)

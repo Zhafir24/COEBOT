@@ -95,7 +95,7 @@ _STYLE_GUIDE = (
     "Do not mix styles inside one list.\n"
     "- Numbered lists ONLY for ordered steps or ranked items. Everything "
     "else uses bullets ('- ').\n"
-    "- Keep each bullet on a single logical point in 1–2 sentences. Use "
+    "- Keep each bullet on a single logical point in 1-2 sentences. Use "
     "nested bullets (indent 2 spaces) sparingly, only when a bullet has "
     "genuine sub-parts.\n"
     "- Never write a list of one item.\n"
@@ -115,7 +115,7 @@ _STYLE_GUIDE = (
     "- Do not use emoji unless the user's own message contains them.\n"
     "\n"
     "PARAGRAPHS AND WHITESPACE\n"
-    "- 3–5 sentences per paragraph is a good rhythm. Break very long "
+    "- 3-5 sentences per paragraph is a good rhythm. Break very long "
     "thoughts, but do not artificially chop natural prose into fragments.\n"
     "- Leave a blank line between every heading, paragraph, list, and "
     "table. No walls of text.\n"
@@ -123,7 +123,7 @@ _STYLE_GUIDE = (
     "CLOSING\n"
     "- A concluding synthesis IS appropriate for long/research answers — "
     "add a '### Kesimpulan' (or '### Conclusion') section that draws "
-    "together the analysis in 1–2 short paragraphs. Skip it for short or "
+    "together the analysis in 1-2 short paragraphs. Skip it for short or "
     "medium answers where nothing needs summarizing.\n"
     "- No 'Semoga membantu!' / 'Hope this helps!' / 'Let me know if you "
     "have any questions.'\n"
@@ -162,8 +162,7 @@ _FULL_DOC_SYSTEM_PROMPT = (
     "IN FULL below, with page markers like [p.3]. Ground every claim in the "
     "documents and cite pages in square brackets like [p.3] — include the "
     "document name when more than one document is provided. Respond in the "
-    "same language as the user's question. Be thorough and well-organized."
-    + _STYLE_GUIDE
+    "same language as the user's question. Be thorough and well-organized." + _STYLE_GUIDE
 )
 
 
@@ -179,10 +178,7 @@ def _with_memory(system_prompt: str, memory_facts: Sequence[str] | None) -> str:
     if not memory_facts:
         return system_prompt
     lines = "\n".join(f"- {fact}" for fact in memory_facts)
-    return (
-        f"{system_prompt}\n\n"
-        f"Known facts about the user (apply them when relevant):\n{lines}"
-    )
+    return f"{system_prompt}\n\nKnown facts about the user (apply them when relevant):\n{lines}"
 
 
 def _memory_block(memory_facts: Sequence[str] | None) -> str:
@@ -210,9 +206,7 @@ def _parse_by_extension(path: Path, *, password: str | None) -> Document:
     )
 
 
-_PARSE_CACHE_DIR = (
-    Path(__file__).resolve().parent.parent.parent / "data" / "cache" / "parsed"
-)
+_PARSE_CACHE_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "cache" / "parsed"
 
 
 def _parse_cached(path: Path) -> Document:
@@ -228,8 +222,11 @@ def _parse_cached(path: Path) -> Document:
 
     try:
         stat = path.stat()
+        # sha1 is used purely as a fast, deterministic cache-key hash of
+        # (path, mtime, size); it never protects a security boundary.
         key = hashlib.sha1(
-            f"{path.resolve()}|{stat.st_mtime_ns}|{stat.st_size}".encode()
+            f"{path.resolve()}|{stat.st_mtime_ns}|{stat.st_size}".encode(),
+            usedforsecurity=False,
         ).hexdigest()
         cache_file = _PARSE_CACHE_DIR / f"{key}.json"
         if cache_file.exists():
@@ -239,7 +236,7 @@ def _parse_cached(path: Path) -> Document:
                 pages=tuple(data["pages"]),
                 metadata=dict(data.get("metadata", {})),
             )
-    except Exception:  # noqa: BLE001 — cache read is best-effort
+    except Exception:  # cache read is best-effort
         logger.warning("Parse-cache read failed for %s", path, exc_info=True)
 
     document = _parse_by_extension(path, password=None)
@@ -251,10 +248,8 @@ def _parse_cached(path: Path) -> Document:
             "pages": list(document.pages),
             "metadata": document.metadata,
         }
-        cache_file.write_text(
-            json.dumps(payload, ensure_ascii=False), encoding="utf-8"
-        )
-    except Exception:  # noqa: BLE001 — cache write is best-effort
+        cache_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    except Exception:  # cache write is best-effort
         logger.warning("Parse-cache write failed for %s", path, exc_info=True)
     return document
 
@@ -341,9 +336,7 @@ def answer_question(
         per_doc_k = max(2, settings.retrieval_top_k // len(source_paths))
         hits = []
         for path in source_paths:
-            hits.extend(
-                store.query(query_embedding, top_k=per_doc_k, source_paths=[path])
-            )
+            hits.extend(store.query(query_embedding, top_k=per_doc_k, source_paths=[path]))
     else:
         hits = store.query(
             query_embedding,
@@ -394,13 +387,9 @@ def answer_full_documents(
     for path in doc_paths:
         document = _parse_cached(Path(path))
         pages = [
-            f"[p.{i + 1}]\n{text.strip()}"
-            for i, text in enumerate(document.pages)
-            if text.strip()
+            f"[p.{i + 1}]\n{text.strip()}" for i, text in enumerate(document.pages) if text.strip()
         ]
-        blocks.append(
-            f"===== DOCUMENT: {Path(path).name} =====\n" + "\n\n".join(pages)
-        )
+        blocks.append(f"===== DOCUMENT: {Path(path).name} =====\n" + "\n\n".join(pages))
     # Memory facts and the question go AFTER the document text: the KV
     # cache matches prompts by token prefix, so the huge document block
     # stays reusable across questions and across memory growth.
@@ -498,7 +487,4 @@ def _build_prompt(
             f"[Excerpt {i} | p.{hit.page_index + 1} of {hit.source.name}]\n{hit.text}"
         )
     context = "\n\n".join(context_blocks)
-    return (
-        f"CONTEXT:\n{context}\n\n"
-        f"{_memory_block(memory_facts)}QUESTION: {question}\n\nANSWER:"
-    )
+    return f"CONTEXT:\n{context}\n\n{_memory_block(memory_facts)}QUESTION: {question}\n\nANSWER:"
