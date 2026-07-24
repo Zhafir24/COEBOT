@@ -52,10 +52,21 @@ class Settings(BaseSettings):
             "picks a sensible default based on core count)."
         ),
     )
+    model_n_gpu_layers: int = Field(
+        default=-1,
+        ge=-1,
+        le=999,
+        description=(
+            "Model layers to offload to the GPU when the installed "
+            "llama-cpp-python build has GPU support (CUDA/Vulkan). "
+            "-1 offloads everything, 0 forces CPU. CPU-only builds accept "
+            "and ignore this value, so it is always safe."
+        ),
+    )
     model_max_tokens: int = Field(
         default=3072,
         gt=0,
-        le=8192,
+        le=16384,
         description=(
             "Maximum tokens the model may generate per response. Generation "
             "stops at the model's natural end-of-answer token, so this is a "

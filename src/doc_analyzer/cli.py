@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     print(f"doc_analyzer {__version__}")
-    print("Phase 1 in progress. Run the Streamlit UI once Phase 3 lands.")
+    print("Start the COEBOT web UI with start_coebot.bat (or: uvicorn doc_analyzer.server:app)")
     return 0
 
 

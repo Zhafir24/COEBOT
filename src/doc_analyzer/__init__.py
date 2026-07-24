@@ -18,5 +18,5 @@ import os
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
-__version__ = "0.1.0"
+__version__ = "2.0.2"
 __all__ = ["__version__"]

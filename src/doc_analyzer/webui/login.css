@@ -1,0 +1,285 @@
+/* COEBOT auth pages (login + create account) — matches the PNM mockups.
+   Reuses :root tokens from styles.css; auth-only tokens defined here. */
+
+:root {
+  --auth-navy: #0E1B3D;
+  --auth-sub: #5D6C8B;
+  --auth-border: #D9E1EF;
+  --auth-placeholder: #9AA6BF;
+  --auth-icon: #8A96AD;
+  --auth-card-shadow: 0 12px 40px rgba(15, 30, 80, 0.08);
+}
+
+/* ---------- page shell ---------- */
+#login-view { position: fixed; inset: 0; overflow: auto; }
+.auth-shell {
+  min-height: 100%;
+  display: flex;
+  background:
+    radial-gradient(120% 90% at 85% 110%, #DCE7F6 0%, rgba(220, 231, 246, 0) 55%),
+    linear-gradient(160deg, #EEF3FB 0%, #E9EFF9 55%, #E4EBF6 100%);
+}
+.auth-shell::after {                     /* soft wave along the bottom */
+  content: '';
+  position: fixed; left: 0; right: 0; bottom: 0; height: 180px;
+  background:
+    radial-gradient(65% 150px at 30% 100%, rgba(255,255,255,.65), rgba(255,255,255,0)),
+    radial-gradient(70% 190px at 75% 100%, rgba(255,255,255,.5), rgba(255,255,255,0));
+  pointer-events: none;
+}
+
+/* ---------- brand panel (left) ---------- */
+.auth-brand {
+  /* Scales with the viewport so ultrawide screens keep the mockup's
+     proportions instead of a skinny fixed column. */
+  flex: 0 0 clamp(380px, 32vw, 600px);
+  display: flex; flex-direction: column;
+  padding: 48px 24px 28px clamp(48px, 4.5vw, 88px);
+  position: relative; z-index: 1;
+}
+.brand-logo { width: 168px; margin-bottom: 40px; }
+.brand-title {
+  font-size: 46px; font-weight: 800; color: var(--primary);
+  letter-spacing: .5px; margin: 0 0 6px;
+}
+.brand-sub { font-size: 20px; font-weight: 600; color: var(--auth-navy); }
+.brand-rule {
+  width: 46px; height: 4px; border-radius: 2px;
+  background: var(--primary); margin: 22px 0;
+}
+.brand-tag { font-size: 18px; font-weight: 600; color: var(--auth-navy); }
+
+.bot-stage { margin: 10px 0 auto; }
+.bot {
+  /* height + aspect-ratio explicit: styles.css sizes bare `svg` at
+     18x18 for UI icons, and the robot must never inherit that. */
+  width: 100%;
+  max-width: clamp(320px, 24vw, 460px);
+  height: auto;
+  aspect-ratio: 460 / 430;
+  display: block;
+}
+
+.brand-badges {
+  display: flex; align-items: center; gap: 16px;
+  margin: 26px 0 14px;
+}
+.brand-badges span {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 14.5px; font-weight: 600; color: var(--primary);
+}
+.brand-badges svg {
+  width: 17px; height: 17px; fill: none;
+  stroke: var(--primary); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.brand-badges i { width: 1px; height: 16px; background: #C9D4E8; }
+.brand-copy { font-size: 13px; color: var(--muted); }
+
+/* ---------- form column (right) ---------- */
+.auth-main {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 40px 48px; position: relative; z-index: 1;
+}
+.auth-card {
+  background: var(--panel);
+  border-radius: 24px;
+  box-shadow: var(--auth-card-shadow);
+  padding: 52px 60px 44px;
+  width: 100%; max-width: clamp(620px, 44vw, 800px);
+}
+.auth-card-wide { max-width: clamp(680px, 50vw, 940px); }
+
+.auth-title {
+  font-size: 32px; font-weight: 800; color: var(--auth-navy);
+  text-align: center; margin: 0 0 8px;
+}
+.auth-sub {
+  font-size: 17px; color: var(--auth-sub);
+  text-align: center; margin: 0 0 34px;
+}
+.auth-error {
+  background: #FDECEC; color: #B3261E; border: 1px solid #F5C6C3;
+  border-radius: 10px; padding: 10px 14px;
+  font-size: 14px; margin-bottom: 18px;
+}
+
+.f-label {
+  display: block; font-size: 15px; font-weight: 700;
+  color: var(--auth-navy); margin: 0 0 9px;
+}
+.f-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-top: 22px;
+}
+.f-link { font-size: 14.5px; font-weight: 700; color: var(--primary); text-decoration: none; }
+.f-link:hover { text-decoration: underline; }
+
+.field {
+  display: flex; align-items: center; gap: 12px;
+  height: 54px; padding: 0 16px;
+  border: 1px solid var(--auth-border); border-radius: 12px;
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(20, 86, 214, .12);
+}
+.field > svg {
+  width: 19px; height: 19px; flex: 0 0 auto;
+  fill: none; stroke: var(--auth-icon); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.field input {
+  flex: 1; border: none; outline: none; background: none;
+  font: inherit; font-size: 15.5px; color: var(--text);
+}
+.field input::placeholder { color: var(--auth-placeholder); }
+.field .eye {
+  border: none; background: none; cursor: pointer; padding: 4px;
+  display: inline-flex;
+}
+.field .eye svg {
+  width: 20px; height: 20px; fill: none;
+  stroke: var(--auth-icon); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.field .eye:hover svg { stroke: var(--primary); }
+
+.pass-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  margin-top: 22px;
+}
+.f-help { font-size: 13.5px; color: var(--auth-sub); margin: 10px 0 0; }
+
+.agree {
+  display: flex; align-items: center; gap: 10px;
+  margin: 22px 0 26px; cursor: pointer;
+  font-size: 15px; color: var(--auth-navy); user-select: none;
+}
+.agree input { display: none; }
+.agree .box {
+  width: 20px; height: 20px; flex: 0 0 auto;
+  border: 2px solid var(--auth-border); border-radius: 6px;
+  background: #fff; position: relative;
+  transition: background .12s, border-color .12s;
+}
+.agree input:checked + .box { background: var(--primary); border-color: var(--primary); }
+.agree input:checked + .box::after {
+  content: '';
+  position: absolute; left: 5px; top: 1px;
+  width: 5px; height: 10px;
+  border: solid #fff; border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+.agree a { color: var(--primary); font-weight: 700; text-decoration: none; }
+.agree a:hover { text-decoration: underline; }
+
+.auth-btn {
+  width: 100%; height: 54px; border-radius: 10px;
+  font-size: 17px; font-weight: 700;
+  transition: background .15s, transform .1s, box-shadow .15s;
+}
+.auth-btn:hover { box-shadow: 0 6px 18px rgba(20, 86, 214, .3); transform: translateY(-1px); }
+.auth-btn:active { transform: translateY(0); }
+
+.auth-switch {
+  text-align: center; margin: 26px 0 0;
+  font-size: 15px; color: var(--auth-sub);
+}
+.auth-switch a { color: var(--primary); font-weight: 700; text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; }
+
+.auth-note {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 24px 0 0; font-size: 14.5px; color: var(--auth-sub);
+}
+.auth-note svg {
+  width: 16px; height: 16px; fill: none;
+  stroke: var(--auth-sub); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ---------- robot animation ---------- */
+.bot-body { animation: bot-float 4s ease-in-out infinite; }
+@keyframes bot-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+.bot-rings { transform-origin: 230px 394px; animation: rings-pulse 4s ease-in-out infinite; }
+@keyframes rings-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(.88); opacity: .7; }
+}
+.arm-wave { transform-origin: 296px 250px; animation: arm-wave 2.4s ease-in-out infinite; }
+@keyframes arm-wave {
+  0%, 55%, 100% { transform: rotate(0deg); }
+  65% { transform: rotate(16deg); }
+  75% { transform: rotate(-6deg); }
+  85% { transform: rotate(14deg); }
+}
+.eye-dot {
+  transform-box: fill-box; transform-origin: center;
+  animation: blink 4.6s infinite;
+}
+@keyframes blink {
+  0%, 91%, 97%, 100% { transform: scaleY(1); }
+  94% { transform: scaleY(.08); }
+}
+.antenna-tip {
+  transform-box: fill-box; transform-origin: center;
+  animation: tip-pulse 2.2s ease-in-out infinite;
+}
+@keyframes tip-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.25); opacity: .75; }
+}
+.auth-brand .bubble { animation: bubble-bob 3.6s ease-in-out infinite; }
+.auth-brand .bubble-r { animation-delay: 1.6s; }
+@keyframes bubble-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.auth-brand .bubble .dot { animation: dot-typing 1.4s ease-in-out infinite; }
+.auth-brand .bubble .d2 { animation-delay: .2s; }
+.auth-brand .bubble .d3 { animation-delay: .4s; }
+@keyframes dot-typing {
+  0%, 60%, 100% { opacity: 1; }
+  30% { opacity: .3; }
+}
+.plant { transform-box: fill-box; transform-origin: bottom center; animation: plant-sway 6s ease-in-out infinite; }
+.plant-r { animation-delay: 3s; }
+@keyframes plant-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(2.5deg); }
+}
+.sp { transform-box: fill-box; transform-origin: center; animation: sparkle 3s ease-in-out infinite; }
+.sp2 { animation-delay: 1s; }
+.sp3 { animation-delay: 2s; }
+@keyframes sparkle {
+  0%, 100% { opacity: .35; transform: scale(.8); }
+  50%      { opacity: 1; transform: scale(1.1); }
+}
+/* Robot animates regardless of the OS reduced-motion setting — chosen
+   deliberately (2026-07-21): the gentle idle motion is the feature, and
+   OS-level "animations off" is usually a performance tweak here, not a
+   vestibular-safety need. */
+
+/* ---------- responsive ---------- */
+@media (max-width: 1080px) {
+  .auth-brand { flex-basis: 360px; padding-left: 36px; }
+  .auth-card { padding: 40px 36px 36px; }
+}
+@media (max-width: 880px) {
+  .auth-shell { flex-direction: column; }
+  .auth-brand {
+    flex: none; align-items: center; text-align: center;
+    padding: 36px 24px 0;
+  }
+  .brand-logo { margin-bottom: 20px; }
+  .bot-stage { max-width: 300px; margin: 6px auto; }
+  .brand-copy { margin-bottom: 8px; }
+  .auth-main { padding: 24px 16px 40px; }
+  .pass-grid { grid-template-columns: 1fr; }
+}

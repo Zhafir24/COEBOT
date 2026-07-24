@@ -175,6 +175,7 @@ class LlmClient:
         model_path: Path,
         n_ctx: int = 8192,
         n_threads: int | None = None,
+        n_gpu_layers: int = -1,
         strip_think_tags: bool = True,
         max_tokens: int = _DEFAULT_MAX_TOKENS,
         kv_cache_dir: Path | None = None,
@@ -189,11 +190,16 @@ class LlmClient:
         # client is actually constructed (rather than at module import).
         from llama_cpp import Llama
 
-        logger.info("Loading GGUF model from %s ...", model_path)
+        logger.info(
+            "Loading GGUF model from %s (n_gpu_layers=%d) ...", model_path, n_gpu_layers
+        )
         self._llm: Llama = Llama(
             model_path=str(model_path),
             n_ctx=n_ctx,
             n_threads=n_threads if n_threads else None,
+            # Offload to GPU on CUDA/Vulkan builds of llama-cpp-python;
+            # the CPU-only build accepts this parameter and ignores it.
+            n_gpu_layers=n_gpu_layers,
             verbose=False,
         )
         self._model_path = model_path

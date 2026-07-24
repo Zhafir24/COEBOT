@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "doc_analyzer"
-version = "1.1.0"
-description = "COEBOT — local document analysis chatbot for enterprise use (RAG over PDFs, DOCXs, XLSXs)."
+version = "2.0.2"
+description = "Local document analysis chatbot for enterprise use (RAG over PDFs)."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.12,<3.14"
@@ -24,27 +24,22 @@ classifiers = [
 
 dependencies = [
     "pypdf>=4.3.0,<6.0",
-    "pypdfium2>=4.30.0,<6.0",
     "python-docx>=1.1.0,<2.0",
-    "mammoth>=1.8.0,<2.0",
     "openpyxl>=3.1.0,<4.0",
-    "pandas>=2.2.0,<3.0",
-    "numpy>=1.26.0,<3.0",
     "diskcache>=5.6.0,<6.0",
-    # Pinned to 0.3.18: the last prebuilt CPU wheel compiled WITHOUT
-    # AVX-512. Wheels 0.3.21+ enable AVX-512, which crashes with
-    # STATUS_ILLEGAL_INSTRUCTION (0xc000001d) on Meteor Lake CPUs
-    # (Core Ultra 185H has no AVX-512). Install with:
-    #   pip install llama-cpp-python==0.3.18 --extra-index-url
-    #   https://abetlen.github.io/llama-cpp-python/whl/cpu
-    "llama-cpp-python==0.3.18",
+    # Pinned to 0.3.32: required for Qwen3.5/3.6 GGUF architectures.
+    # No prebuilt Windows wheel exists for this version — it must be
+    # built from source (CPU: CMAKE_ARGS=-DGGML_NATIVE=OFF for a
+    # portable AVX2 binary without AVX-512; Meteor Lake CPUs crash on
+    # AVX-512 builds with STATUS_ILLEGAL_INSTRUCTION). The portable
+    # ZIP ships a prebuilt wheel; see also install-cuda.ps1 for GPU.
+    "llama-cpp-python==0.3.32",
     "chromadb>=0.5.0,<2.0",
     "sentence-transformers>=3.0.0,<5.0",
-    # Pinned band: the sidebar CSS targets Streamlit's DOM (testids +
-    # wrapper structure), which changed in 1.58. The UI is built and
-    # tested against 1.58/1.59; an untested framework jump silently
-    # breaks layout (learned the hard way).
-    "streamlit>=1.58.0,<1.60",
+    "starlette>=0.37.0,<1.0",
+    "uvicorn>=0.29.0,<1.0",
+    "itsdangerous>=2.1.0,<3.0",
+    "python-multipart>=0.0.9,<1.0",
     "pydantic>=2.6.0,<3.0",
     "pydantic-settings>=2.2.0,<3.0",
     "python-dotenv>=1.0.0,<2.0",
@@ -66,8 +61,8 @@ dev = [
 doc-analyzer = "doc_analyzer.cli:main"
 
 [project.urls]
-Repository = "https://github.com/Zhafir24/COEBOT"
-Issues = "https://github.com/Zhafir24/COEBOT/issues"
+Repository = "https://github.com/zhafirdhafin7/doc_analyzer"
+Issues = "https://github.com/zhafirdhafin7/doc_analyzer/issues"
 
 # --- Hatch build config (src layout) ---
 [tool.hatch.build.targets.wheel]
@@ -128,11 +123,10 @@ show_error_codes = true
 pretty = true
 
 # Third-party libraries without type stubs.
-# (chromadb and sentence_transformers ship their own stubs as of the
-# versions we pin; only the truly untyped libraries remain here.)
+# (chromadb, ollama, and sentence_transformers ship their own stubs as
+# of the versions we pin; only the truly untyped libraries remain here.)
 [[tool.mypy.overrides]]
 module = [
-    "streamlit.*",
     "pypdf.*",
 ]
 ignore_missing_imports = true
@@ -153,7 +147,7 @@ addopts = [
     "--cov-fail-under=80",
 ]
 markers = [
-    "integration: integration tests that touch real services (ChromaDB, sentence-transformers)",
+    "integration: integration tests that touch real services (Ollama, ChromaDB)",
     "slow: tests that take more than a second",
 ]
 

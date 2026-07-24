@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COEBOT</title>
+<link rel="stylesheet" href="/assets/styles.css?v=7">
+<link rel="stylesheet" href="/assets/login.css?v=5">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+</head>
+<body>
+
+<!-- ============ LOGIN / REGISTER VIEW ============ -->
+<div id="login-view" class="hidden">
+  <div class="auth-shell">
+
+    <!-- Brand panel (left) -->
+    <aside class="auth-brand">
+      <img src="/logo.svg" alt="PNM" class="brand-logo">
+      <h1 class="brand-title">COEBOT</h1>
+      <div class="brand-sub">AI Assistant for PNM</div>
+      <div class="brand-rule"></div>
+      <div class="brand-tag">Your AI smart assistant</div>
+
+      <div class="bot-stage">
+        <svg class="bot" viewBox="0 0 460 430" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <g class="bot-rings">
+            <ellipse cx="230" cy="394" rx="60" ry="11" fill="#C7DBF7" opacity=".55"/>
+            <ellipse cx="230" cy="394" rx="90" ry="17" fill="none" stroke="#8FB6F2" stroke-width="3" opacity=".4"/>
+          </g>
+          <g class="plant plant-l">
+            <path d="M60 396c-2-30-18-46-34-52 4 24 12 44 34 52z" fill="#8FB2EA"/>
+            <path d="M64 396c8-26 2-48-12-62-6 22-4 46 12 62z" fill="#B4CDF3"/>
+            <path d="M70 396c14-16 18-34 12-52-12 12-20 34-12 52z" fill="#6E9CE4"/>
+          </g>
+          <g class="plant plant-r">
+            <path d="M400 396c2-26 14-42 30-48-4 22-12 40-30 48z" fill="#4CBE6E"/>
+            <path d="M394 396c-8-22-4-42 10-56 6 20 4 42-10 56z" fill="#2FA45C"/>
+          </g>
+          <g fill="#BFD5F8">
+            <path class="sp sp1" d="M96 236l4 10 10 4-10 4-4 10-4-10-10-4 10-4z"/>
+            <path class="sp sp2" d="M382 302l3 8 8 3-8 3-3 8-3-8-8-3 8-3z"/>
+            <path class="sp sp3" d="M368 178l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/>
+          </g>
+          <g class="bubble bubble-l">
+            <rect x="34" y="86" width="112" height="64" rx="18" fill="#D9E8FB"/>
+            <path d="M118 148l16 20 4-22z" fill="#D9E8FB"/>
+            <g fill="#fff">
+              <circle class="dot d1" cx="70" cy="118" r="7"/>
+              <circle class="dot d2" cx="92" cy="118" r="7"/>
+              <circle class="dot d3" cx="114" cy="118" r="7"/>
+            </g>
+          </g>
+          <g class="bubble bubble-r">
+            <rect x="322" y="74" width="100" height="58" rx="16" fill="#22C55E"/>
+            <path d="M340 130l-12 20-4-20z" fill="#22C55E"/>
+            <g fill="#fff">
+              <circle class="dot d1" cx="352" cy="103" r="6"/>
+              <circle class="dot d2" cx="372" cy="103" r="6"/>
+              <circle class="dot d3" cx="392" cy="103" r="6"/>
+            </g>
+          </g>
+          <g class="bot-body">
+            <g class="arm-wave">
+              <path d="M296 250c26-4 44-22 50-46" fill="none" stroke="#E2E9F5" stroke-width="18" stroke-linecap="round"/>
+              <path d="M296 250c26-4 44-22 50-46" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round"/>
+              <circle cx="350" cy="198" r="14" fill="#14337A"/>
+            </g>
+            <path d="M166 252c-22 6-34 22-36 44" fill="none" stroke="#E2E9F5" stroke-width="18" stroke-linecap="round"/>
+            <path d="M166 252c-22 6-34 22-36 44" fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round"/>
+            <circle cx="128" cy="300" r="13" fill="#14337A"/>
+            <line x1="230" y1="120" x2="230" y2="94" stroke="#9FB4D8" stroke-width="6" stroke-linecap="round"/>
+            <circle class="antenna-tip" cx="230" cy="84" r="10" fill="#22C55E"/>
+            <rect x="166" y="118" width="128" height="98" rx="30" fill="#fff" stroke="#E2E9F5" stroke-width="3"/>
+            <rect x="150" y="150" width="16" height="34" rx="8" fill="#4D7FDD"/>
+            <rect x="294" y="150" width="16" height="34" rx="8" fill="#4D7FDD"/>
+            <rect x="184" y="136" width="92" height="60" rx="18" fill="#14337A"/>
+            <g fill="#fff">
+              <circle class="eye-dot" cx="212" cy="162" r="7.5"/>
+              <circle class="eye-dot" cx="248" cy="162" r="7.5"/>
+            </g>
+            <path d="M219 178c4 5 18 5 22 0" stroke="#fff" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+            <rect x="176" y="222" width="108" height="112" rx="34" fill="#fff" stroke="#E2E9F5" stroke-width="3"/>
+            <rect x="196" y="248" width="68" height="44" rx="10" fill="#fff" stroke="#D5E0F2" stroke-width="2"/>
+            <text x="230" y="276" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="800" fill="#1456D6">PNM</text>
+            <rect x="200" y="330" width="20" height="26" rx="9" fill="#DDE7F6"/>
+            <rect x="240" y="330" width="20" height="26" rx="9" fill="#DDE7F6"/>
+            <circle cx="210" cy="360" r="9" fill="#14337A"/>
+            <circle cx="250" cy="360" r="9" fill="#14337A"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="brand-badges">
+        <span><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Secure</span>
+        <i></i>
+        <span><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>Trusted</span>
+        <i></i>
+        <span><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Professional</span>
+      </div>
+      <div class="brand-copy">© 2024 Permodalan Nasional Madani. All rights reserved.</div>
+    </aside>
+
+    <!-- Form column (right) -->
+    <main class="auth-main">
+
+      <!-- LOGIN CARD -->
+      <div class="auth-card" id="card-login">
+        <h2 class="auth-title">Welcome Back!</h2>
+        <p class="auth-sub">Login to continue to COEBOT</p>
+        <div class="auth-error hidden" id="li-error"></div>
+
+        <label class="f-label" for="li-user">Username</label>
+        <div class="field">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input id="li-user" type="text" placeholder="Enter your username" autocomplete="username">
+        </div>
+
+        <div class="f-row">
+          <label class="f-label" for="li-pass">Password</label>
+          <a href="#" class="f-link" id="forgot-link">Forgot password?</a>
+        </div>
+        <div class="field">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <input id="li-pass" type="password" placeholder="Enter your password" autocomplete="current-password">
+          <button class="eye" type="button" data-eye="li-pass" aria-label="Show password">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+
+        <label class="agree"><input type="checkbox" id="li-remember" checked><span class="box"></span>Remember me</label>
+
+        <button class="btn-primary auth-btn" id="li-btn">Login</button>
+        <p class="auth-switch">Don't have an account? <a href="#" id="to-register">Create account</a></p>
+      </div>
+
+      <!-- REGISTER CARD -->
+      <div class="auth-card auth-card-wide hidden" id="card-register">
+        <h2 class="auth-title">Create Your Account</h2>
+        <p class="auth-sub">Join COEBOT and experience smarter assistance</p>
+        <div class="auth-error hidden" id="reg-error"></div>
+
+        <label class="f-label" for="reg-user">Username</label>
+        <div class="field">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input id="reg-user" type="text" placeholder="Enter your username" autocomplete="username">
+        </div>
+
+        <div class="pass-grid">
+          <div>
+            <label class="f-label" for="reg-pass">Password</label>
+            <div class="field">
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input id="reg-pass" type="password" placeholder="Create a password" autocomplete="new-password">
+              <button class="eye" type="button" data-eye="reg-pass" aria-label="Show password">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="f-label" for="reg-pass2">Confirm Password</label>
+            <div class="field">
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input id="reg-pass2" type="password" placeholder="Confirm your password" autocomplete="new-password">
+              <button class="eye" type="button" data-eye="reg-pass2" aria-label="Show password">
+                <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <p class="f-help">Minimum 8 characters with uppercase, lowercase, number, and symbol.</p>
+
+        <label class="agree"><input type="checkbox" id="reg-agree" checked><span class="box"></span>
+          <span>I agree to the <a href="#" id="terms-link">Terms of Use</a> and <a href="#" id="privacy-link">Privacy Policy</a></span>
+        </label>
+
+        <button class="btn-primary auth-btn" id="reg-btn">Create Account</button>
+        <p class="auth-note">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Your data is safe and secure with PNM.
+        </p>
+        <p class="auth-switch">Already have an account? <a href="#" id="to-login">Sign in</a></p>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ APP VIEW ============ -->
+<div id="app-view" class="hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="side-logo"><img src="/logo.svg" alt="PNM"></div>
+
+    <button id="new-chat" class="btn-primary btn-newchat">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      New Chat
+    </button>
+
+    <nav class="side-nav">
+      <button class="nav-item" data-view="history">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Chat History
+      </button>
+      <button class="nav-item" data-view="saved">
+        <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        Saved
+      </button>
+      <button class="nav-item" data-view="favorites">
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Favorites
+      </button>
+    </nav>
+
+    <div class="recents-label" id="recents-label">RECENT CHATS</div>
+    <div class="recents" id="recents"></div>
+
+    <div class="side-divider"></div>
+    <nav class="side-nav side-nav-bottom">
+      <button class="nav-item" id="nav-settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </button>
+      <button class="nav-item" id="nav-profile">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </button>
+      <button class="nav-item" id="nav-help">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Help &amp; Support
+      </button>
+      <button class="nav-item" id="nav-logout">
+        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Logout
+      </button>
+    </nav>
+
+    <div class="private-card">
+      <div class="private-row">
+        <span class="private-lock">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </span>
+        <span class="private-title">Private Chat</span>
+        <label class="switch">
+          <input type="checkbox" id="private-toggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <p class="private-cap">Your messages in Private Chat won't be recorded or saved.</p>
+      <a class="private-more" href="https://github.com/Zhafir24/COEBOT#readme" target="_blank" rel="noopener">Learn more →</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="header">
+      <div>
+        <div class="header-title-row">
+          <span class="header-title">COEBOT</span>
+          <span class="header-chip">AI Assistant</span>
+        </div>
+        <div class="header-sub">Your smart assistant for PNM</div>
+      </div>
+      <div class="header-right">
+        <span class="online"><span class="online-dot"></span>Online</span>
+        <span class="header-avatar" id="header-avatar">A</span>
+      </div>
+    </header>
+
+    <div class="chat-scroll" id="chat-scroll">
+      <div class="banner hidden" id="private-banner">
+        <span class="banner-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+        </span>
+        <span class="banner-text">
+          <span class="banner-title">Private Chat Mode Active</span>
+          <span class="banner-cap">This conversation is not recorded, saved, or used to improve AI.</span>
+        </span>
+        <a class="banner-more" href="https://github.com/Zhafir24/COEBOT#readme" target="_blank" rel="noopener">
+          Learn more
+          <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+        <button class="banner-x" id="banner-x">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="hero hidden" id="hero">
+        <div class="hero-title" id="hero-title">COEBOT</div>
+        <div class="hero-cap" id="hero-cap">Your smart assistant for PNM. Ask anything about your documents.</div>
+      </div>
+
+      <div id="messages"></div>
+    </div>
+
+    <div class="input-zone">
+      <div class="chip-rail" id="chip-rail"></div>
+      <div class="input-bar">
+        <button class="icon-btn" id="attach-btn" title="Attach a document">
+          <svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <input type="file" id="file-input" class="hidden" multiple accept=".pdf,.docx,.xlsx">
+        <textarea id="chat-input" rows="1" placeholder="Ask anything..."></textarea>
+        <div class="model-chip" id="model-chip">
+          <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.3-6.2-4.5-6.2 4.5 2.4-7.3L2 9.4h7.6z"/></svg>
+          <span id="model-name">Model</span>
+          <svg class="chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          <div class="model-menu hidden" id="model-menu"></div>
+        </div>
+        <button class="send-btn" id="send-btn" title="Send">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="under-input hidden" id="under-input">
+        <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        You are in Private Chat mode. This conversation is not recorded or saved.
+        <span class="sep">|</span>
+        <a href="#" id="turn-off-private">Turn off Private Chat</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal-back hidden" id="modal-back">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <span id="modal-title">Settings</span>
+      <button class="icon-btn" id="modal-x">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<script src="/assets/app.js?v=6"></script>
+</body>
+</html>
