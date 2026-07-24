@@ -1,0 +1,65 @@
+# COEBOT — Docker Compose service definition.
+#
+# Modern Compose (v2+) uses this filename (compose.yaml). Older
+# `docker-compose` CLI reads docker-compose.yml — this repo does NOT
+# provide the legacy filename because it enforces the plugin-style
+# `docker compose` command (with a space) that ships with Docker
+# Desktop and Docker Engine 20.10+.
+
+services:
+  coebot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: coebot:2.0.2
+    container_name: coebot
+    restart: unless-stopped
+
+    # Host {COEBOT_PORT}:container 80. Override in .env or on the CLI:
+    #   COEBOT_PORT=9090 docker compose up -d
+    # Docker Desktop publishes to 127.0.0.1 by default (not exposed on
+    # the LAN). Default 8080 is chosen because 80 is often reserved.
+    ports:
+      - "${COEBOT_PORT:-8080}:80"
+
+    # Bind mounts keep user data and downloaded models on the HOST, so
+    # they survive `docker compose down` and image rebuilds.
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+
+    # Every env var COEBOT reads (defaults from .env.example). Override
+    # via a real .env file next to compose.yaml or on the command line.
+    environment:
+      MODEL_FILENAME: ${MODEL_FILENAME:-}
+      MODEL_N_CTX: ${MODEL_N_CTX:-40960}
+      MODEL_MAX_TOKENS: ${MODEL_MAX_TOKENS:-12000}
+      MODEL_N_THREADS: ${MODEL_N_THREADS:-0}
+      MODEL_N_GPU_LAYERS: ${MODEL_N_GPU_LAYERS:-0}
+      KV_CACHE_GB: ${KV_CACHE_GB:-8}
+
+    # Reserve a floor of RAM so the model doesn't get killed on first
+    # load. Adjust upwards to match the model you drop into models/:
+    #   - 8B  models: ~10 GB
+    #   - 30B models: ~28 GB
+    deploy:
+      resources:
+        limits:
+          memory: 12g
+        reservations:
+          memory: 8g
+
+    # Same healthcheck as the Dockerfile, expressed here so
+    # `docker compose ps` can report readiness.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:80/api/bootstrap', timeout=3).status == 200 else 1)",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3

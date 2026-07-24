@@ -1,0 +1,73 @@
+# Files/dirs NOT sent to the Docker build context. Anything listed
+# here is skipped during `docker build`, reducing the context size
+# (and therefore the build's cold-start time) and stopping local
+# secrets/state from leaking into image layers.
+
+# --- version control + editor state ---
+.git/
+.gitignore
+.gitattributes
+.github/
+.vscode/
+.idea/
+*.swp
+
+# --- Python runtime state ---
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+build/
+dist/
+*.egg-info/
+
+# --- COEBOT runtime data (persisted via bind mount, never baked in) ---
+data/chats/*
+data/documents/*
+data/chroma_db/*
+data/cache/
+data/users.json
+data/current_chat.json
+data/pending_attachments.json
+data/selected_model.json
+data/session_secret.txt
+data/memory.json
+data/active_session.json
+!data/*/.gitkeep
+
+# --- Downloaded models (gigabytes; mounted at runtime) ---
+models/*
+!models/README.md
+
+# --- Windows/portable launcher assets not needed in the container ---
+launch-windows.ps1
+install-cuda.bat
+install-cuda.ps1
+start_coebot.bat
+
+# --- Local env (secrets) ---
+.env
+.env.local
+.env.*.local
+
+# --- CI/tooling that has no runtime role ---
+tests/
+scripts/
+docs/
+CONTRIBUTING.md
+SECURITY.md
+CHANGELOG.md
+.pre-commit-config.yaml
+.python-version
+
+# --- Docker meta (don't recursively package the compose file) ---
+compose.yaml
+docker/README.md

@@ -18,6 +18,135 @@ Fully-local document analysis chatbot. Runs Qwen3 / Qwen3.5 / Qwen3.6 (or any GG
 
 Optional GPU acceleration (NVIDIA only): double-click **`install-cuda.bat`** after step 3. It self-elevates, checks CUDA Toolkit + Build Tools (with links if missing), builds the GPU engine, and automatically restores the CPU engine if anything fails.
 
+---
+
+## 🐳 Install with Docker Desktop
+
+Cross-platform alternative to the Windows ZIP. Runs in a container, works on Windows, macOS (Intel), and Linux. The container is CPU-only (see notes at the end of this section for GPU + Apple Silicon).
+
+### Prerequisites
+
+| Requirement | Where to get it |
+|---|---|
+| **Docker Desktop 4.24+** | https://www.docker.com/products/docker-desktop/ |
+| **Docker Engine 20.10+** (Linux only, if you prefer no Desktop) | https://docs.docker.com/engine/install/ |
+| **Git** | https://git-scm.com/downloads |
+| **16 GB RAM** (8B models) or **32 GB RAM** (30B models) | your machine |
+| **~10 GB free disk** for the image + a `.gguf` model | your machine |
+| **A free host TCP port** (default 8080) | your machine |
+| **Internet during the first build** (to pull the base image + Python packages) | your network |
+
+Windows users: Docker Desktop must be running in **WSL2 mode** (the default since 2020). Check via *Settings → General → Use the WSL 2 based engine*.
+
+### Steps (from a fresh clone)
+
+Open a terminal (PowerShell on Windows, Terminal on macOS/Linux) and run:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Zhafir24/COEBOT.git
+cd COEBOT
+
+# 2. Make sure Docker is running (icon in system tray / menu bar). Verify:
+docker compose version
+#    -> Docker Compose version v2.x  (must NOT say "docker-compose")
+
+# 3. Build the image. Takes 15-30 min on first build (llama-cpp-python
+#    compiles from source; subsequent builds are cached and fast).
+docker compose build
+
+# 4. Put a .gguf model file in the models/ folder (see download links in
+#    the ZIP install section above). At least one model must be present
+#    or the container will error the first time you send a chat.
+
+# 5. Start the container in the background
+docker compose up -d
+
+# 6. Open http://localhost:8080/ in your browser
+```
+
+### Verify it worked
+
+```bash
+# Should show one container named "coebot" in state "Up (healthy)"
+docker compose ps
+
+# Bootstrap endpoint returns a small JSON object
+curl http://localhost:8080/api/bootstrap
+#   -> {"user":null,"has_users":false}
+
+# Stream logs (Ctrl-C to detach; container keeps running)
+docker compose logs -f coebot
+```
+
+The health check first turns "healthy" 60–90 s after start (it waits for the embedding model + Python startup).
+
+### Stop, restart, remove
+
+```bash
+docker compose stop            # stop containers, keep data + image
+docker compose start           # start again
+docker compose down            # stop AND remove containers (keeps volumes)
+docker compose down -v         # ALSO delete the data/ + models/ contents
+docker compose up -d --build   # rebuild the image after a git pull
+```
+
+### Data persistence
+
+The compose file bind-mounts two host directories into the container so nothing is lost across restarts:
+
+| Host folder | Container path | What lives there |
+|---|---|---|
+| `./data/` | `/app/data/` | user accounts, chats, uploaded documents, ChromaDB vector index, session secret, memory |
+| `./models/` | `/app/models/` | your `.gguf` model files (put them here before first chat) |
+
+Back up the `./data/` folder to preserve your chats and account across image rebuilds.
+
+### Common configuration overrides
+
+Copy `.env.example` to `.env` next to the compose file and edit — Compose picks it up automatically:
+
+```bash
+cp .env.example .env
+```
+
+Frequently-changed variables:
+
+- `MODEL_N_CTX=40960` — context window (default 40K = ~70 pages of deep-read)
+- `MODEL_MAX_TOKENS=12000` — maximum output tokens per answer
+- `MODEL_N_THREADS=0` — CPU threads (0 = auto-detect)
+
+Or change the published port without editing any file:
+
+```bash
+COEBOT_PORT=9090 docker compose up -d
+```
+
+The compose file reads `${COEBOT_PORT:-8080}`, so this works for any host port you have free. Persist the choice by adding `COEBOT_PORT=9090` to `.env`.
+
+### Notes and current limitations
+
+- **Apple Silicon (M1/M2/M3):** the image builds `linux/amd64` binaries. It will run under Rosetta emulation on Apple Silicon but LLM inference will be very slow. A native `linux/arm64` build is planned but not yet published.
+- **NVIDIA GPU:** the Docker image is CPU-only. Enabling GPU inside a container requires the NVIDIA Container Toolkit plus a rebuilt engine wheel with CUDA — not covered here. For GPU use, prefer the native Windows install with `install-cuda.bat` (see the ZIP install section).
+- **Slow first build:** the 15–30 min figure is compilation of `llama-cpp-python`. Subsequent `docker compose build` runs reuse the cached layer and take under a minute unless `pyproject.toml` or `src/` changes.
+- **Port 80 vs 8080:** Docker publishes container port 80 as host port 8080 to avoid clashing with anything already listening on host port 80. The native (non-Docker) install uses 80 directly.
+
+### Troubleshooting
+
+**"docker: command not found" or "Cannot connect to the Docker daemon."** Docker Desktop isn't running (or, on Linux, the `docker` service is stopped). Open Docker Desktop and wait for the icon to say "Docker Desktop is running" before retrying.
+
+**"Bind for 0.0.0.0:8080 failed: port is already allocated."** Something else on your machine already uses port 8080. Change the left side of the `ports:` mapping in `compose.yaml` to a free port (e.g. `9090:80`) and re-run `docker compose up -d`.
+
+**Container starts then exits immediately.** Run `docker compose logs coebot` — the most common causes are: no `.gguf` file in `models/` (the app can start but can't answer), or the model needs more memory than the compose file's `deploy.resources.limits.memory: 12g` allows (raise it to `24g` for the 30B model).
+
+**"unhealthy" status in `docker compose ps`.** The healthcheck failed. Usually means the app didn't finish starting inside the 90-second grace period. Check `docker compose logs coebot` for the actual error; if the model is genuinely still loading (very large model on slow disk), increase the `healthcheck.start_period` in `compose.yaml`.
+
+**Windows: bind mount fails with "invalid mount config."** Your project folder is on a Windows path Docker Desktop can't share. Move the project into your user profile (`C:\Users\<you>\...`) or enable file sharing for the drive in Docker Desktop → Settings → Resources → File Sharing.
+
+**Build fails during `pip wheel llama-cpp-python`.** Almost always memory exhaustion during compilation. Docker Desktop → Settings → Resources → give the VM at least 6 GB memory, then `docker compose build --no-cache` to retry.
+
+---
+
 Everything below this line is the **developer install** for editing the source code, running tests, or contributing.
 
 ---
