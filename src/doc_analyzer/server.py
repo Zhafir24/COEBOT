@@ -28,10 +28,13 @@ import logging
 import re
 import secrets
 import threading
+from collections.abc import AsyncIterator
 from pathlib import Path
+from typing import Any
 
 from itsdangerous import BadSignature, URLSafeSerializer
 from starlette.applications import Starlette
+from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Mount, Route
@@ -41,7 +44,7 @@ from doc_analyzer import store_chats as cs
 from doc_analyzer.auth.store import UserStore, UserStoreError
 from doc_analyzer.config import get_settings
 from doc_analyzer.embeddings.encoder import Embedder
-from doc_analyzer.llm.client import LlmClient
+from doc_analyzer.llm.client import ChatMessage, LlmClient
 from doc_analyzer.memory import UserMemory
 from doc_analyzer.pipeline import (
     Answer,
@@ -51,7 +54,7 @@ from doc_analyzer.pipeline import (
     extract_memory_fact,
     ingest_document,
 )
-from doc_analyzer.retrieval.store import VectorStore
+from doc_analyzer.retrieval.store import RetrievedChunk, VectorStore
 
 logger = logging.getLogger(__name__)
 
@@ -128,8 +131,7 @@ def _resolve_model_path(filename: str) -> Path:
     ggufs = sorted(d.glob("*.gguf")) if d.exists() else []
     if not ggufs:
         raise FileNotFoundError(
-            "No .gguf file found in the models directory. "
-            "Download a model and place it in models/."
+            "No .gguf file found in the models directory. Download a model and place it in models/."
         )
     return ggufs[0]
 
@@ -178,7 +180,9 @@ def _session_user(request: Request) -> str | None:
     return user if user and _users.get(user) is not None else None
 
 
-def _login_response(payload: dict, username: str, *, remember: bool = True) -> JSONResponse:
+def _login_response(
+    payload: dict[str, Any], username: str, *, remember: bool = True
+) -> JSONResponse:
     resp = JSONResponse(payload)
     resp.set_cookie(
         _COOKIE,
@@ -219,18 +223,16 @@ async def api_login(request: Request) -> JSONResponse:
     password = str(body.get("password") or "")
     if not _users.authenticate(username, password):
         return JSONResponse({"error": "Invalid username or password"}, status_code=401)
-    return _login_response(
-        {"user": username}, username, remember=bool(body.get("remember", True))
-    )
+    return _login_response({"user": username}, username, remember=bool(body.get("remember", True)))
 
 
-async def api_logout(request: Request) -> JSONResponse:
+async def api_logout(request: Request) -> JSONResponse:  # noqa: ARG001 (starlette route contract requires the argument)
     resp = JSONResponse({"ok": True})
     resp.delete_cookie(_COOKIE)
     return resp
 
 
-def _models_payload() -> dict:
+def _models_payload() -> dict[str, Any]:
     d = _settings.models_dir
     models = sorted(p.name for p in d.glob("*.gguf")) if d.exists() else []
     selected = cs.load_selected_model()
@@ -242,9 +244,7 @@ def _models_payload() -> dict:
 async def api_bootstrap(request: Request) -> JSONResponse:
     user = _require_user(request)
     if not user:
-        return JSONResponse(
-            {"user": None, "has_users": _users.has_users()}, status_code=200
-        )
+        return JSONResponse({"user": None, "has_users": _users.has_users()}, status_code=200)
     current_id = cs.load_current_chat_id()
     current = cs.load_chat(current_id) if current_id else None
     return JSONResponse(
@@ -310,7 +310,10 @@ async def api_pending(request: Request) -> JSONResponse:
     if not _require_user(request):
         return _unauth()
     body = await request.json()
-    names = [str(n) for n in (body.get("names") or [])]
+    # Normalize to basenames only — protects against path-traversal via
+    # user-supplied attachment names ('../../users.json' etc.) which the
+    # pipeline later joins onto DOCS_DIR when loading documents.
+    names = [Path(str(n)).name for n in (body.get("names") or []) if str(n)]
     if not body.get("private"):
         cs.save_pending(names)
     return JSONResponse({"ok": True})
@@ -332,7 +335,7 @@ def _background_ingest(save_path: Path, name: str) -> None:
                 settings=_settings,
             )
         logger.info("Background ingestion complete: %s", name)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:  #
         logger.exception("Background ingestion failed for %s", name)
         save_path.unlink(missing_ok=True)
         with _ingest_state_lock:
@@ -362,7 +365,7 @@ async def api_upload(request: Request) -> JSONResponse:
         return _unauth()
     form = await request.form()
     uf = form.get("file")
-    if uf is None:
+    if not isinstance(uf, UploadFile):
         return JSONResponse({"error": "no file"}, status_code=400)
     name = Path(uf.filename or "upload").name
     if Path(name).suffix.lower() not in _SUPPORTED_EXTS:
@@ -386,20 +389,25 @@ async def api_upload(request: Request) -> JSONResponse:
     with _ingest_state_lock:
         _ingest_events[name] = threading.Event()
         _ingest_errors.pop(name, None)
-    threading.Thread(
-        target=_background_ingest, args=(save_path, name), daemon=True
-    ).start()
+    threading.Thread(target=_background_ingest, args=(save_path, name), daemon=True).start()
     return JSONResponse({"name": name, "status": "indexing"})
 
 
 def _run_pipeline(
-    question: str, messages: list[dict], private: bool, model: str
-) -> tuple[str, list]:
+    question: str,
+    messages: list[dict[str, Any]],
+    private: bool,
+    model: str,
+) -> tuple[str, list[RetrievedChunk]]:
     """The exact decision tree the Streamlit UI used."""
+    # Basename-normalize every attachment name we see so a malicious
+    # client cannot escape DOCS_DIR via '../' in the attachments list
+    # of a chat message (defense in depth on top of api_pending).
     chat_doc_names: list[str] = []
     for m in messages:
-        for name in m.get("attachments") or []:
-            if name not in chat_doc_names:
+        for raw in m.get("attachments") or []:
+            name = Path(str(raw)).name
+            if name and name not in chat_doc_names:
                 chat_doc_names.append(name)
 
     llm = _get_llm(model)
@@ -423,32 +431,30 @@ def _run_pipeline(
             )
         else:
             answer = Answer(
-                text="ℹ️ Sudah tersimpan sebelumnya / Already in memory.",
+                text="[i] Sudah tersimpan sebelumnya / Already in memory.",
                 sources=(),
             )
         return answer.text, list(answer.sources)
 
     if chat_doc_names:
-        existing_paths = [
-            p for p in (cs.DOCS_DIR / n for n in chat_doc_names) if p.exists()
-        ]
-        answer = None
+        existing_paths = [p for p in (cs.DOCS_DIR / n for n in chat_doc_names) if p.exists()]
+        doc_answer: Answer | None = None
         if existing_paths:
-            answer = answer_full_documents(
+            doc_answer = answer_full_documents(
                 question,
                 doc_paths=existing_paths,
                 llm=llm,
                 settings=_settings,
                 memory_facts=mem_facts,
             )
-        if answer is None:
+        if doc_answer is None:
             # Deep-read didn't fit — we need retrieval. If any attached
             # doc was uploaded seconds ago and its background ingestion
             # is still running, wait for it now so search hits real
             # chunks instead of an empty index.
             _wait_for_ingestion(chat_doc_names)
             chat_doc_paths = [str(cs.DOCS_DIR / n) for n in chat_doc_names]
-            answer = answer_question(
+            retrieved = answer_question(
                 question,
                 embedder=_get_embedder(),
                 store=_get_store(),
@@ -457,25 +463,23 @@ def _run_pipeline(
                 source_paths=chat_doc_paths,
                 memory_facts=mem_facts,
             )
-            answer = Answer(
-                text=answer.text
-                + "\n\n*(Documents were too large to read in full — this "
+            doc_answer = Answer(
+                text=retrieved.text + "\n\n*(Documents were too large to read in full — this "
                 "answer is based on the most relevant retrieved excerpts.)*",
-                sources=answer.sources,
+                sources=retrieved.sources,
             )
-        return answer.text, list(answer.sources)
+        return doc_answer.text, list(doc_answer.sources)
 
-    history = [
+    history: list[ChatMessage] = [
         {"role": m["role"], "content": m["content"]}
         for m in messages[-10:]
-        if m.get("role") in ("user", "assistant")
-        and not str(m.get("content", "")).startswith("⚠️")
+        if m.get("role") in ("user", "assistant") and not str(m.get("content", "")).startswith("⚠️")
     ]
-    answer = converse(history, llm=llm, memory_facts=mem_facts)
-    return answer.text, list(answer.sources)
+    chat_answer = converse(history, llm=llm, memory_facts=mem_facts)
+    return chat_answer.text, list(chat_answer.sources)
 
 
-def _send_sync(body: dict) -> dict:
+def _send_sync(body: dict[str, Any]) -> dict[str, Any]:
     question = str(body.get("question") or "").strip()
     private = bool(body.get("private"))
     model = Path(str(body.get("model") or "")).name
@@ -483,7 +487,7 @@ def _send_sync(body: dict) -> dict:
     chat_id = body.get("chat_id") or cs.new_chat_id()
 
     stored = None if private else cs.load_chat(chat_id)
-    messages: list[dict] = list((stored or {}).get("messages") or [])
+    messages: list[dict[str, Any]] = list((stored or {}).get("messages") or [])
     # In private mode the client supplies the in-memory transcript.
     if private:
         messages = [m for m in (body.get("messages") or []) if isinstance(m, dict)]
@@ -501,7 +505,7 @@ def _send_sync(body: dict) -> dict:
             text, sources = _run_pipeline(question, messages, private, model)
     except FileNotFoundError as exc:
         text, sources = f"⚠️ **No model available.** {exc}", []
-    except Exception as exc:  # noqa: BLE001 — surfaced to the UI
+    except Exception as exc:  # surfaced to the UI
         logger.exception("Chat pipeline failed")
         text, sources = (
             f"⚠️ **Something went wrong while generating the answer.**\n\n`{exc}`",
@@ -533,7 +537,7 @@ def _send_sync(body: dict) -> dict:
                 fact = extract_memory_fact(question, llm=_get_llm(model))
                 if fact:
                     _get_memory().add(fact)
-            except Exception:  # noqa: BLE001 — memory is best-effort
+            except Exception:  # memory is best-effort
                 logger.debug("Memory extraction failed", exc_info=True)
 
     return {
@@ -573,7 +577,7 @@ async def api_memory(request: Request) -> JSONResponse:
     return JSONResponse({"facts": mem.facts()})
 
 
-async def index(request: Request) -> FileResponse:
+async def index(request: Request) -> FileResponse:  # noqa: ARG001 (starlette route contract requires the argument)
     # no-cache: the browser must always revalidate the shell so UI updates
     # land on a plain reload (assets are cache-busted via ?v= versions).
     return FileResponse(
@@ -582,7 +586,7 @@ async def index(request: Request) -> FileResponse:
     )
 
 
-async def logo(request: Request) -> FileResponse:
+async def logo(request: Request) -> FileResponse:  # noqa: ARG001 (starlette route contract requires the argument)
     return FileResponse(_LOGO_PATH, media_type="image/svg+xml")
 
 
@@ -606,26 +610,28 @@ routes = [
     Mount("/fonts", StaticFiles(directory=str(_FONTS_DIR)), name="fonts"),
 ]
 
+
 def _prewarm() -> None:
     """Load the embedder + vector store on server boot so the FIRST
-    document upload doesn't pay the ~2–3s SentenceTransformer cold-start
+    document upload doesn't pay the ~2-3s SentenceTransformer cold-start
     cost. Runs on a background thread so uvicorn's startup isn't blocked.
     """
+
     def _warm() -> None:
         try:
             logger.info("Pre-warming embedder + vector store...")
             emb = _get_embedder()
             emb.encode(["warmup"])  # triggers _ensure_loaded()
-            _get_store()             # opens the ChromaDB connection
+            _get_store()  # opens the ChromaDB connection
             logger.info("Pre-warm complete.")
-        except Exception:  # noqa: BLE001 — startup optimization only
+        except Exception:  # startup optimization only
             logger.warning("Pre-warm failed; first upload will be slower", exc_info=True)
 
     threading.Thread(target=_warm, daemon=True).start()
 
 
 @contextlib.asynccontextmanager
-async def _lifespan(_app):
+async def _lifespan(_app: Starlette) -> AsyncIterator[None]:
     _prewarm()
     yield
 
