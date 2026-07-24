@@ -46,7 +46,7 @@ You can expect:
 ## Hardening guidance for operators
 
 - Restrict the `data/documents/`, `data/chats/`, `data/users.json`, and `data/memory.json` files' permissions to the application user only.
-- Streamlit binds to port 80 by default (`.streamlit/config.toml`) and `127.0.0.1`. Do **not** change the bind address to `0.0.0.0` without a firewall in front — the app has no rate limiting or CSRF hardening for network exposure.
+- The Starlette server binds to `127.0.0.1` on port 80 by default (see `launch-windows.ps1`). Do **not** change the bind address to `0.0.0.0` without a firewall in front — the app has no rate limiting or CSRF hardening for network exposure.
 - Apply OS-level patches to the PDF/DOCX/XLSX rendering stack regularly.
 - Review the `EMBEDDING_MODEL` choice — the default is from HuggingFace and downloaded on first run.
 - Never commit `*.gguf`, `data/chats/`, `data/users.json`, or `data/memory.json` — the shipped `.gitignore` already blocks these paths.

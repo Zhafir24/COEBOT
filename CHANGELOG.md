@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] — 2026-07-23
+
+### Added
+- **Instant document upload.** Upload endpoint responds in ~60 ms (was tens of seconds); embedding runs on a background thread while the user types. Startup pre-warm loads the embedding model at boot so the first upload has no cold-start cost.
+- **Encoder batching.** `encode()` now uses `batch_size=64` (was default 32) for ~40% faster embedding on typical documents.
+- **LENGTH-aware answer style.** System prompt teaches the model to write long, thorough, multi-section responses when the user says "research", "kajian", "analisis mendalam", or when analyzing an attached document; short questions still get short answers.
+- **Bigger runtime defaults.** `.env` ships with `MODEL_N_CTX=40960` (~70 pages of deep-read) and `MODEL_MAX_TOKENS=12000` so long answers don't require multiple turns.
+- **CUDA installer hardening.** `install-cuda.bat` self-elevates via UAC; `install-cuda.ps1` enables Windows Long Path support, redirects `%TEMP%` to a short path (avoids MAX_PATH errors during the llama-cpp-python build), installs the build backend into the environment for `--no-build-isolation` (required for embedded Python), and has full try/catch/finally with automatic backup restore on any failure.
+- **Justified paragraphs** on AI responses for tidier reading.
+- **`### ` heading rendering** now visually distinct: 17.5 px navy weight-700 with proper spacing (was 1 px larger than body text).
+
+### Fixed
+- **Chat message bubbles no longer inherit the login-page bob animation** — the login page's `.bubble` speech-bubble rules were leaking into the chat view (same class name). Login rules are now scoped to `.auth-brand .bubble`.
+- **Markdown renderer:** `### ` now correctly maps to `<h3>` (was `<h4>`) so the heading CSS applies.
+- **Accessibility "reduce motion" no longer freezes the login-page robot** — the ambient idle animation is intentional and always plays.
+
+### Changed
+- Style guide no longer suggests `##` headings (they don't fit a chat context and rendered too weakly). Model is now instructed to use `**bold labels**` for section markers and reserve `### ` for genuinely long, multi-paragraph sections.
+
+## [2.0.1] — 2026-07-21
+
+### Added
+- **Embedding model bundled in the portable ZIP** (~87 MB of `all-MiniLM-L6-v2` at `models/embedding/`). Fresh installs on offline machines no longer fail on first upload with `LocalEntryNotFoundError` from Hugging Face Hub.
+- Encoder now prefers a bundled `models/embedding/` path if present, falling back to the HF cache otherwise.
+
+### Fixed
+- Chat message bubbles no longer bob (see 2.0.2 for the full scoping fix — 2.0.1 shipped a partial version).
+
+## [2.0.0] — 2026-07-20
+
+### Removed
+- **Streamlit is gone.** The entire UI framework, its 1.58-specific DOM workarounds, and the `.streamlit/` config directory. Replaced with a Starlette + custom vanilla-JS web UI. Streamlit was uninstalled from the venv; the pyproject dependency was replaced with `starlette + uvicorn + itsdangerous + python-multipart` (all already transitive in the previous stack, so the effective install size shrank).
+
+### Added
+- **New Starlette backend** (`src/doc_analyzer/server.py`) — JSON API + static file serving; no UI framework.
+- **New hand-written web frontend** (`src/doc_analyzer/webui/`) — pixel-perfect PNM-branded login and chat UIs, animated robot on the login page, private-chat mode enforced server-side, favorites, model switcher, professional markdown rendering with tables and code blocks. Plus Jakarta Sans fonts are served locally.
+- **New chat persistence** (`src/doc_analyzer/store_chats.py`) — Streamlit-free JSON-per-chat store.
+- **Optional NVIDIA CUDA path** — `install-cuda.bat` / `install-cuda.ps1` scripts detect NVIDIA + CUDA Toolkit + Visual Studio Build Tools, rebuild `llama-cpp-python` from source with `-DGGML_CUDA=on`, verify GPU offload actually works, and restore the CPU build on any failure.
+- **Engine upgraded to `llama-cpp-python==0.3.32`** — required for Qwen3.5 and Qwen3.6 GGUF architectures. Portable ZIP ships a purpose-built generic-AVX2 wheel (no AVX-512) that runs on any modern Windows x86-64 CPU.
+- **Dependency list corrected** — `python-docx`, `openpyxl`, and `diskcache` are now declared (they were transitive-only in v1.x, which caused fresh installs to break on document upload). Unused declared deps removed.
+
+### Changed
+- Runtime split: the portable edition (bundled Python + all packages) is now the primary distribution channel; the developer install remains for editing source. See the [Releases page](https://github.com/Zhafir24/COEBOT/releases/latest) for the portable ZIP.
+- Package version bumped to `2.0.0` to reflect the UI framework replacement (breaking change for anyone with an existing `data/pending_attachments.json` that referenced Streamlit's session state).
+
 ## [1.1.0] — 2026-07-16
 
 ### Added
@@ -56,5 +101,8 @@ Initial public release.
 - `.gitignore` blocks all runtime data by default: `data/users.json`, `data/memory.json`, `data/chats/`, session state, GGUF weights, vector DB, and per-session UI state.
 - No outbound network calls at runtime after the first-run embedding-model download.
 
+[2.0.2]: https://github.com/Zhafir24/COEBOT/releases/tag/v2.0.2
+[2.0.1]: https://github.com/Zhafir24/COEBOT/releases/tag/v2.0.1
+[2.0.0]: https://github.com/Zhafir24/COEBOT/releases/tag/v2.0.0
 [1.1.0]: https://github.com/Zhafir24/COEBOT/releases/tag/v1.1.0
 [0.1.0]: https://github.com/Zhafir24/COEBOT/releases/tag/v1.0.0

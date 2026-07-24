@@ -16,7 +16,7 @@
 
 - [ ] Unit tests added or updated
 - [ ] Integration tests run locally (if applicable)
-- [ ] Manual smoke test of the Streamlit app
+- [ ] Manual smoke test of the web UI (`start_coebot.bat`, browse to http://127.0.0.1/)
 - [ ] `ruff check` clean
 - [ ] `ruff format --check` clean
 - [ ] `mypy src` clean

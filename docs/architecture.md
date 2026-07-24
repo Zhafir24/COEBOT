@@ -50,8 +50,9 @@ decisions. Updated whenever a major component changes.
 | `doc_analyzer.memory`               | Per-user personal facts. Injected into prompts on relevance match, kept out of KV-cached prefix.    |
 | `doc_analyzer.auth.store`           | Local user store with scrypt-hashed passwords + active-session tracker.                             |
 | `doc_analyzer.pipeline`             | Orchestrates ingestion + retrieval + inference. Two modes: RAG and full-document deep read.         |
-| `doc_analyzer.ui.app`               | Streamlit interface (chat, uploads, chat history, model picker).                                    |
-| `doc_analyzer.ui.styles`            | Centralized CSS injection and PNM brand palette.                                                    |
+| `doc_analyzer.server`               | Starlette + uvicorn HTTP backend: JSON API, session cookies, background ingestion, static webui.    |
+| `doc_analyzer.store_chats`          | Chat persistence (one JSON per chat) + pending-attachments and selected-model state.                |
+| `doc_analyzer.webui/`               | Hand-written HTML/CSS/JS frontend served as static files (no framework).                            |
 | `doc_analyzer.cli`                  | CLI entry point.                                                                                    |
 
 ## Key decisions
